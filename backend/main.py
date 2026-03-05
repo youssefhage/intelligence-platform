@@ -27,7 +27,12 @@ from backend.models import (  # noqa: F401 - ensure all models registered with B
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    setup_logging()
+    import traceback
+
+    try:
+        setup_logging()
+    except Exception as e:
+        print(f"Logging setup warning: {e}")
 
     # Create tables using SQLAlchemy metadata (works even without alembic migrations)
     try:
@@ -36,8 +41,9 @@ async def lifespan(app: FastAPI):
         print("Database tables ensured")
     except Exception as e:
         print(f"Table creation warning: {e}")
+        traceback.print_exc()
 
-    # Also try alembic stamp if tables were just created
+    # Also try alembic for any pending migrations
     try:
         import subprocess
         result = subprocess.run(
@@ -66,6 +72,7 @@ async def lifespan(app: FastAPI):
                 print(f"Database has {count} commodities, skipping seed")
     except Exception as e:
         print(f"Seed skipped: {e}")
+        traceback.print_exc()
 
     yield
 

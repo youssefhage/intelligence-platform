@@ -1,32 +1,25 @@
 #!/bin/bash
 echo "=== Starting FMCG Intelligence Platform ==="
 echo "Python: $(python --version)"
-echo "Env vars: $(env | grep -c .)"
-echo "DATABASE_URL: ${DATABASE_URL:0:40}..."
+echo "DATABASE_URL: ${DATABASE_URL:0:50}..."
 
-# Write startup error to file accessible by health endpoint
-python -c "
-import sys, os, traceback
+# Start uvicorn, capture exit code
+uvicorn backend.main:app --host 0.0.0.0 --port 8000 2>&1 | tee /tmp/uvicorn.log &
+UVICORN_PID=$!
 
-# Write errors to a file so we can read them via health endpoint
-error_file = '/tmp/startup_error.txt'
-try:
-    from backend.main import app
-    print('Import OK')
-    # Remove any old error file
-    if os.path.exists(error_file):
-        os.remove(error_file)
-except Exception as e:
-    error_msg = traceback.format_exc()
-    print(f'Import FAILED: {e}', file=sys.stderr)
-    print(error_msg, file=sys.stderr)
-    with open(error_file, 'w') as f:
-        f.write(error_msg)
-    sys.exit(1)
-"
+# Wait a bit to see if it crashes
+sleep 10
 
-if [ $? -ne 0 ]; then
-    echo "=== Import failed! Starting minimal debug server ==="
+# Check if uvicorn is still running
+if kill -0 $UVICORN_PID 2>/dev/null; then
+    echo "Uvicorn started successfully, waiting..."
+    wait $UVICORN_PID
+else
+    echo "=== Uvicorn crashed! Starting debug server ==="
+    echo "Last log output:"
+    tail -30 /tmp/uvicorn.log
+
+    # Start a minimal server that exposes the error
     python -c "
 from fastapi import FastAPI
 from fastapi.responses import PlainTextResponse
@@ -38,15 +31,11 @@ app = FastAPI()
 @app.get('/')
 def health():
     try:
-        with open('/tmp/startup_error.txt') as f:
+        with open('/tmp/uvicorn.log') as f:
             return PlainTextResponse(f.read(), status_code=500)
     except:
-        return PlainTextResponse('Unknown startup error', status_code=500)
+        return PlainTextResponse('No log file found', status_code=500)
 
 uvicorn.run(app, host='0.0.0.0', port=8000)
 "
-    exit 0
 fi
-
-echo "Starting uvicorn..."
-exec uvicorn backend.main:app --host 0.0.0.0 --port 8000
