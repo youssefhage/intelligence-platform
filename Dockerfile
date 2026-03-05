@@ -7,8 +7,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     rm -rf /var/lib/apt/lists/*
 
 COPY pyproject.toml ./
-RUN pip install --no-cache-dir .
-RUN pip install --no-cache-dir prophet || echo "Prophet not available, forecasting will use fallback"
+ARG CACHE_BUST=3
+RUN pip install --no-cache-dir . 2>&1 | tail -5 && echo "=== Core deps installed ==="
+RUN pip install --no-cache-dir prophet 2>&1 | tail -5 || echo "Prophet not available, forecasting will use fallback"
 
 COPY backend/ ./backend/
 COPY alembic/ ./alembic/
