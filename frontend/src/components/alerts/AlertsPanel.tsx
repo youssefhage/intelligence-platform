@@ -1,18 +1,19 @@
 import { api } from "../../services/api";
 import { useApi } from "../../hooks/useApi";
 import type { Alert } from "../../types";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+import { CheckCircle2, Eye } from "lucide-react";
 
-const cardStyle: React.CSSProperties = {
-  background: "#1e293b",
-  borderRadius: 12,
-  padding: 24,
-  border: "1px solid #334155",
-};
-
-const severityColors: Record<string, string> = {
-  info: "#3b82f6",
-  warning: "#f59e0b",
-  critical: "#ef4444",
+const severityVariant = (severity: string) => {
+  switch (severity) {
+    case "critical": return "destructive" as const;
+    case "warning": return "warning" as const;
+    default: return "default" as const;
+  }
 };
 
 const typeLabels: Record<string, string> = {
@@ -38,121 +39,84 @@ export default function AlertsPanel() {
     alerts.reload();
   };
 
+  if (alerts.loading) {
+    return (
+      <div className="space-y-3">
+        {[1, 2, 3, 4].map((i) => (
+          <Skeleton key={i} className="h-32 rounded-xl" />
+        ))}
+      </div>
+    );
+  }
+
+  if (alerts.data?.length === 0) {
+    return (
+      <Card>
+        <CardContent className="flex h-48 items-center justify-center">
+          <p className="text-sm text-muted-foreground">No active alerts. All clear.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <div>
-      <h2 style={{ fontSize: 22, fontWeight: 600, color: "#f1f5f9", marginBottom: 24 }}>
-        Alerts & Notifications
-      </h2>
-
-      {alerts.loading ? (
-        <div style={{ color: "#94a3b8" }}>Loading alerts...</div>
-      ) : alerts.data?.length === 0 ? (
-        <div style={cardStyle}>
-          <p style={{ color: "#94a3b8", fontSize: 14 }}>No active alerts. All clear.</p>
-        </div>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {alerts.data?.map((alert) => (
-            <div
-              key={alert.id}
-              style={{
-                ...cardStyle,
-                borderLeft: `4px solid ${severityColors[alert.severity] || "#64748b"}`,
-                opacity: alert.is_read ? 0.7 : 1,
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                  <span
-                    style={{
-                      fontSize: 11,
-                      padding: "2px 8px",
-                      borderRadius: 4,
-                      background: severityColors[alert.severity] + "22",
-                      color: severityColors[alert.severity],
-                      fontWeight: 700,
-                      textTransform: "uppercase",
-                    }}
-                  >
+    <div className="space-y-3">
+      {alerts.data?.map((alert) => (
+        <Card
+          key={alert.id}
+          className={cn(
+            "border-l-4 transition-opacity",
+            alert.severity === "critical"
+              ? "border-l-destructive"
+              : alert.severity === "warning"
+                ? "border-l-warning"
+                : "border-l-primary",
+            alert.is_read && "opacity-60"
+          )}
+        >
+          <CardContent className="pt-6">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1 space-y-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant={severityVariant(alert.severity)} className="uppercase">
                     {alert.severity}
-                  </span>
-                  <span
-                    style={{
-                      fontSize: 11,
-                      padding: "2px 8px",
-                      borderRadius: 4,
-                      background: "#334155",
-                      color: "#94a3b8",
-                    }}
-                  >
+                  </Badge>
+                  <Badge variant="secondary">
                     {typeLabels[alert.alert_type] || alert.alert_type}
+                  </Badge>
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(alert.created_at).toLocaleString()}
                   </span>
                 </div>
-                <span style={{ fontSize: 12, color: "#64748b" }}>
-                  {new Date(alert.created_at).toLocaleString()}
-                </span>
-              </div>
 
-              <h4 style={{ fontSize: 15, fontWeight: 600, color: "#f1f5f9", marginBottom: 8 }}>
-                {alert.title}
-              </h4>
-              <p style={{ fontSize: 13, color: "#94a3b8", lineHeight: 1.6, marginBottom: 12 }}>
-                {alert.message}
-              </p>
+                <h4 className="text-[15px] font-semibold text-foreground">
+                  {alert.title}
+                </h4>
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  {alert.message}
+                </p>
 
-              {alert.action_recommended && (
-                <div
-                  style={{
-                    padding: "10px 14px",
-                    background: "#0f172a",
-                    borderRadius: 8,
-                    fontSize: 13,
-                    color: "#3b82f6",
-                    marginBottom: 12,
-                    borderLeft: "3px solid #3b82f6",
-                  }}
-                >
-                  Recommended: {alert.action_recommended}
-                </div>
-              )}
-
-              <div style={{ display: "flex", gap: 8 }}>
-                {!alert.is_read && (
-                  <button
-                    onClick={() => handleMarkRead(alert.id)}
-                    style={{
-                      padding: "6px 14px",
-                      border: "1px solid #334155",
-                      borderRadius: 6,
-                      background: "transparent",
-                      color: "#94a3b8",
-                      cursor: "pointer",
-                      fontSize: 12,
-                    }}
-                  >
-                    Mark Read
-                  </button>
+                {alert.action_recommended && (
+                  <div className="rounded-lg border-l-[3px] border-l-primary bg-muted/50 px-4 py-2.5 text-sm text-primary">
+                    Recommended: {alert.action_recommended}
+                  </div>
                 )}
-                <button
-                  onClick={() => handleResolve(alert.id)}
-                  style={{
-                    padding: "6px 14px",
-                    border: "none",
-                    borderRadius: 6,
-                    background: "#22c55e22",
-                    color: "#22c55e",
-                    cursor: "pointer",
-                    fontSize: 12,
-                    fontWeight: 600,
-                  }}
-                >
-                  Resolve
-                </button>
               </div>
             </div>
-          ))}
-        </div>
-      )}
+
+            <div className="mt-4 flex gap-2">
+              {!alert.is_read && (
+                <Button variant="outline" size="sm" onClick={() => handleMarkRead(alert.id)}>
+                  <Eye className="h-3.5 w-3.5" /> Mark Read
+                </Button>
+              )}
+              <Button variant="success" size="sm" onClick={() => handleResolve(alert.id)}>
+                <CheckCircle2 className="h-3.5 w-3.5" /> Resolve
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 }

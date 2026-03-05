@@ -1,27 +1,18 @@
 import { api } from "../../services/api";
 import { useApi } from "../../hooks/useApi";
 import type { DashboardSummary, CommodityPrice, Alert } from "../../types";
-
-const cardStyle: React.CSSProperties = {
-  background: "#1e293b",
-  borderRadius: 12,
-  padding: 24,
-  border: "1px solid #334155",
-};
-
-const statStyle: React.CSSProperties = {
-  fontSize: 32,
-  fontWeight: 700,
-  color: "#f1f5f9",
-  marginBottom: 4,
-};
-
-const labelStyle: React.CSSProperties = {
-  fontSize: 13,
-  color: "#94a3b8",
-  textTransform: "uppercase" as const,
-  letterSpacing: 1,
-};
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+import {
+  BarChart3,
+  Package,
+  ShieldAlert,
+  Bell,
+  TrendingUp,
+  TrendingDown,
+} from "lucide-react";
 
 export default function DashboardOverview() {
   const summary = useApi<DashboardSummary>(
@@ -34,150 +25,204 @@ export default function DashboardOverview() {
     () => api.getAlerts(5) as Promise<Alert[]>
   );
 
-  if (summary.loading) return <div style={{ color: "#94a3b8" }}>Loading dashboard...</div>;
+  if (summary.loading) {
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-28 rounded-xl" />
+          ))}
+        </div>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <Skeleton className="h-80 rounded-xl lg:col-span-2" />
+          <Skeleton className="h-80 rounded-xl" />
+        </div>
+      </div>
+    );
+  }
 
   const s = summary.data;
 
-  return (
-    <div>
-      <h2 style={{ fontSize: 22, fontWeight: 600, color: "#f1f5f9", marginBottom: 24 }}>
-        Market Intelligence Dashboard
-      </h2>
+  const kpis = [
+    {
+      label: "Commodities Tracked",
+      value: s?.total_commodities_tracked ?? 0,
+      icon: BarChart3,
+      color: "text-primary",
+    },
+    {
+      label: "Active Products",
+      value: s?.total_products ?? 0,
+      icon: Package,
+      color: "text-primary",
+    },
+    {
+      label: "Supply Risk Score",
+      value: s?.overall_supply_risk_score ?? 0,
+      icon: ShieldAlert,
+      color:
+        (s?.overall_supply_risk_score ?? 0) > 50
+          ? "text-destructive"
+          : "text-success",
+    },
+    {
+      label: "Active Alerts",
+      value: s?.active_alerts ?? 0,
+      icon: Bell,
+      color:
+        (s?.active_alerts ?? 0) > 0 ? "text-warning" : "text-success",
+    },
+  ];
 
+  return (
+    <div className="space-y-6">
       {/* KPI Cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 32 }}>
-        <div style={cardStyle}>
-          <div style={labelStyle}>Commodities Tracked</div>
-          <div style={statStyle}>{s?.total_commodities_tracked ?? 0}</div>
-        </div>
-        <div style={cardStyle}>
-          <div style={labelStyle}>Active Products</div>
-          <div style={statStyle}>{s?.total_products ?? 0}</div>
-        </div>
-        <div style={cardStyle}>
-          <div style={labelStyle}>Supply Risk Score</div>
-          <div style={{ ...statStyle, color: (s?.overall_supply_risk_score ?? 0) > 50 ? "#ef4444" : "#22c55e" }}>
-            {s?.overall_supply_risk_score ?? 0}
-          </div>
-        </div>
-        <div style={cardStyle}>
-          <div style={labelStyle}>Active Alerts</div>
-          <div style={{ ...statStyle, color: (s?.active_alerts ?? 0) > 0 ? "#f59e0b" : "#22c55e" }}>
-            {s?.active_alerts ?? 0}
-          </div>
-        </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {kpis.map((kpi) => {
+          const Icon = kpi.icon;
+          return (
+            <Card key={kpi.label}>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                      {kpi.label}
+                    </p>
+                    <p className={cn("mt-2 text-3xl font-bold", kpi.color)}>
+                      {kpi.value}
+                    </p>
+                  </div>
+                  <div className="rounded-lg bg-muted p-3">
+                    <Icon className={cn("h-5 w-5", kpi.color)} />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       {/* Two-column layout */}
-      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 24 }}>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Commodity Prices */}
-        <div style={cardStyle}>
-          <h3 style={{ fontSize: 16, fontWeight: 600, color: "#f1f5f9", marginBottom: 16 }}>
-            Commodity Prices
-          </h3>
-          {prices.loading ? (
-            <div style={{ color: "#94a3b8" }}>Loading prices...</div>
-          ) : (
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr style={{ borderBottom: "1px solid #334155" }}>
-                  <th style={{ textAlign: "left", padding: "8px 12px", color: "#94a3b8", fontSize: 12 }}>
-                    Commodity
-                  </th>
-                  <th style={{ textAlign: "right", padding: "8px 12px", color: "#94a3b8", fontSize: 12 }}>
-                    Price (USD)
-                  </th>
-                  <th style={{ textAlign: "right", padding: "8px 12px", color: "#94a3b8", fontSize: 12 }}>
-                    7d Change
-                  </th>
-                  <th style={{ textAlign: "left", padding: "8px 12px", color: "#94a3b8", fontSize: 12 }}>
-                    Category
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {prices.data?.map((p) => (
-                  <tr key={p.commodity_id} style={{ borderBottom: "1px solid #1e293b" }}>
-                    <td style={{ padding: "10px 12px", color: "#e2e8f0", fontSize: 14 }}>
-                      {p.commodity_name}
-                    </td>
-                    <td style={{ padding: "10px 12px", textAlign: "right", color: "#f1f5f9", fontSize: 14 }}>
-                      {p.current_price_usd != null
-                        ? `$${p.current_price_usd.toLocaleString()}`
-                        : "-"}
-                    </td>
-                    <td
-                      style={{
-                        padding: "10px 12px",
-                        textAlign: "right",
-                        fontSize: 14,
-                        color:
-                          p.week_change_pct == null
-                            ? "#94a3b8"
-                            : p.week_change_pct > 0
-                              ? "#ef4444"
-                              : "#22c55e",
-                      }}
-                    >
-                      {p.week_change_pct != null ? `${p.week_change_pct > 0 ? "+" : ""}${p.week_change_pct}%` : "-"}
-                    </td>
-                    <td style={{ padding: "10px 12px", color: "#94a3b8", fontSize: 13 }}>
-                      <span
-                        style={{
-                          background: "#334155",
-                          padding: "2px 8px",
-                          borderRadius: 4,
-                          fontSize: 12,
-                        }}
-                      >
-                        {p.category}
-                      </span>
-                    </td>
-                  </tr>
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>Commodity Prices</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {prices.loading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-10" />
                 ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="pb-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                        Commodity
+                      </th>
+                      <th className="pb-3 text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                        Price (USD)
+                      </th>
+                      <th className="pb-3 text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                        7d Change
+                      </th>
+                      <th className="pb-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                        Category
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {prices.data?.map((p) => (
+                      <tr
+                        key={p.commodity_id}
+                        className="transition-colors hover:bg-muted/50"
+                      >
+                        <td className="py-3 text-sm font-medium text-foreground">
+                          {p.commodity_name}
+                        </td>
+                        <td className="py-3 text-right text-sm font-medium text-foreground tabular-nums">
+                          {p.current_price_usd != null
+                            ? `$${p.current_price_usd.toLocaleString()}`
+                            : "-"}
+                        </td>
+                        <td className="py-3 text-right text-sm">
+                          {p.week_change_pct != null ? (
+                            <span
+                              className={cn(
+                                "inline-flex items-center gap-1 font-medium",
+                                p.week_change_pct > 0
+                                  ? "text-destructive"
+                                  : "text-success"
+                              )}
+                            >
+                              {p.week_change_pct > 0 ? (
+                                <TrendingUp className="h-3.5 w-3.5" />
+                              ) : (
+                                <TrendingDown className="h-3.5 w-3.5" />
+                              )}
+                              {p.week_change_pct > 0 ? "+" : ""}
+                              {p.week_change_pct}%
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </td>
+                        <td className="py-3">
+                          <Badge variant="secondary">{p.category}</Badge>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Recent Alerts */}
-        <div style={cardStyle}>
-          <h3 style={{ fontSize: 16, fontWeight: 600, color: "#f1f5f9", marginBottom: 16 }}>
-            Recent Alerts
-          </h3>
-          {alerts.loading ? (
-            <div style={{ color: "#94a3b8" }}>Loading alerts...</div>
-          ) : alerts.data?.length === 0 ? (
-            <div style={{ color: "#94a3b8", fontSize: 14 }}>No active alerts</div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {alerts.data?.map((a) => (
-                <div
-                  key={a.id}
-                  style={{
-                    padding: 12,
-                    borderRadius: 8,
-                    background: "#0f172a",
-                    borderLeft: `3px solid ${
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Alerts</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {alerts.loading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-16" />
+                ))}
+              </div>
+            ) : alerts.data?.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No active alerts</p>
+            ) : (
+              <div className="space-y-3">
+                {alerts.data?.map((a) => (
+                  <div
+                    key={a.id}
+                    className={cn(
+                      "rounded-lg border-l-[3px] bg-muted/50 p-3",
                       a.severity === "critical"
-                        ? "#ef4444"
+                        ? "border-l-destructive"
                         : a.severity === "warning"
-                          ? "#f59e0b"
-                          : "#3b82f6"
-                    }`,
-                  }}
-                >
-                  <div style={{ fontSize: 13, fontWeight: 600, color: "#e2e8f0", marginBottom: 4 }}>
-                    {a.title}
+                          ? "border-l-warning"
+                          : "border-l-primary"
+                    )}
+                  >
+                    <p className="text-sm font-medium text-foreground">
+                      {a.title}
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground line-clamp-2">
+                      {a.message}
+                    </p>
                   </div>
-                  <div style={{ fontSize: 12, color: "#94a3b8" }}>
-                    {a.message.slice(0, 120)}{a.message.length > 120 ? "..." : ""}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

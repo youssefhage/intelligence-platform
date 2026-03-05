@@ -2,23 +2,20 @@ import { useState } from "react";
 import { api } from "../../services/api";
 import { useApi } from "../../hooks/useApi";
 import type { MarketInsight } from "../../types";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+import { Sparkles, FileBarChart, X } from "lucide-react";
 
-const cardStyle: React.CSSProperties = {
-  background: "#1e293b",
-  borderRadius: 12,
-  padding: 24,
-  border: "1px solid #334155",
-};
-
-const btnStyle: React.CSSProperties = {
-  padding: "10px 20px",
-  border: "none",
-  borderRadius: 8,
-  cursor: "pointer",
-  fontSize: 14,
-  fontWeight: 600,
-  background: "#3b82f6",
-  color: "#fff",
+const categoryVariant = (category: string) => {
+  switch (category) {
+    case "risk": return "destructive" as const;
+    case "pricing": return "default" as const;
+    case "sourcing": return "success" as const;
+    default: return "secondary" as const;
+  }
 };
 
 export default function InsightsPanel() {
@@ -30,158 +27,122 @@ export default function InsightsPanel() {
 
   const handleGenerateBriefing = async () => {
     setGenerating(true);
-    try {
-      await api.getDailyBriefing();
-      insights.reload();
-    } finally {
-      setGenerating(false);
-    }
+    try { await api.getDailyBriefing(); insights.reload(); }
+    finally { setGenerating(false); }
   };
 
   const handleAnalyzeMarket = async () => {
     setGenerating(true);
-    try {
-      await api.analyzeMarket();
-      insights.reload();
-    } finally {
-      setGenerating(false);
-    }
+    try { await api.analyzeMarket(); insights.reload(); }
+    finally { setGenerating(false); }
   };
 
   const parseActions = (actionsStr: string | null): string[] => {
     if (!actionsStr) return [];
-    try {
-      return JSON.parse(actionsStr);
-    } catch {
-      return [];
-    }
+    try { return JSON.parse(actionsStr); }
+    catch { return []; }
   };
 
   return (
-    <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-        <h2 style={{ fontSize: 22, fontWeight: 600, color: "#f1f5f9" }}>
-          AI-Powered Insights
-        </h2>
-        <div style={{ display: "flex", gap: 12 }}>
-          <button
-            style={{ ...btnStyle, background: "#059669" }}
-            onClick={handleGenerateBriefing}
-            disabled={generating}
-          >
-            {generating ? "Generating..." : "Daily Briefing"}
-          </button>
-          <button style={btnStyle} onClick={handleAnalyzeMarket} disabled={generating}>
-            {generating ? "Analyzing..." : "Market Analysis"}
-          </button>
-        </div>
+    <div className="space-y-6">
+      {/* Actions Bar */}
+      <div className="flex flex-wrap gap-3">
+        <Button variant="success" onClick={handleGenerateBriefing} disabled={generating}>
+          <Sparkles className="h-4 w-4" />
+          {generating ? "Generating..." : "Daily Briefing"}
+        </Button>
+        <Button onClick={handleAnalyzeMarket} disabled={generating}>
+          <FileBarChart className="h-4 w-4" />
+          {generating ? "Analyzing..." : "Market Analysis"}
+        </Button>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: selectedInsight ? "1fr 1fr" : "1fr", gap: 24 }}>
+      <div className={cn("grid grid-cols-1 gap-6", selectedInsight && "lg:grid-cols-2")}>
         {/* Insights List */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <div className="space-y-3">
           {insights.loading ? (
-            <div style={{ color: "#94a3b8" }}>Loading insights...</div>
+            [1, 2, 3].map((i) => <Skeleton key={i} className="h-32 rounded-xl" />)
           ) : insights.data?.length === 0 ? (
-            <div style={cardStyle}>
-              <p style={{ color: "#94a3b8" }}>
-                No insights yet. Click "Daily Briefing" or "Market Analysis" to generate AI-powered insights.
-              </p>
-            </div>
+            <Card>
+              <CardContent className="flex h-48 items-center justify-center">
+                <p className="text-sm text-muted-foreground">
+                  No insights yet. Click "Daily Briefing" or "Market Analysis" to generate AI-powered insights.
+                </p>
+              </CardContent>
+            </Card>
           ) : (
             insights.data?.map((insight) => (
-              <div
+              <Card
                 key={insight.id}
-                style={{
-                  ...cardStyle,
-                  cursor: "pointer",
-                  borderColor: selectedInsight?.id === insight.id ? "#3b82f6" : "#334155",
-                }}
+                className={cn(
+                  "cursor-pointer transition-all hover:shadow-md",
+                  selectedInsight?.id === insight.id && "ring-2 ring-primary"
+                )}
                 onClick={() => setSelectedInsight(insight)}
               >
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                  <span
-                    style={{
-                      fontSize: 11,
-                      textTransform: "uppercase",
-                      padding: "2px 8px",
-                      borderRadius: 4,
-                      background:
-                        insight.category === "risk"
-                          ? "#7f1d1d"
-                          : insight.category === "pricing"
-                            ? "#1e3a5f"
-                            : insight.category === "sourcing"
-                              ? "#14532d"
-                              : "#334155",
-                      color: "#e2e8f0",
-                    }}
-                  >
-                    {insight.category}
-                  </span>
-                  <span style={{ fontSize: 12, color: "#64748b" }}>
-                    {new Date(insight.created_at).toLocaleDateString()}
-                  </span>
-                </div>
-                <h4 style={{ fontSize: 15, fontWeight: 600, color: "#f1f5f9", marginBottom: 8 }}>
-                  {insight.title}
-                </h4>
-                <p style={{ fontSize: 13, color: "#94a3b8", lineHeight: 1.5 }}>
-                  {insight.summary}
-                </p>
-                {insight.confidence_score != null && (
-                  <div style={{ marginTop: 8, fontSize: 12, color: "#64748b" }}>
-                    Confidence: {(insight.confidence_score * 100).toFixed(0)}%
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <Badge variant={categoryVariant(insight.category)}>{insight.category}</Badge>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(insight.created_at).toLocaleDateString()}
+                    </span>
                   </div>
-                )}
-              </div>
+                  <h4 className="mt-3 text-[15px] font-semibold text-foreground">{insight.title}</h4>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground line-clamp-3">
+                    {insight.summary}
+                  </p>
+                  {insight.confidence_score != null && (
+                    <div className="mt-3 flex items-center gap-2">
+                      <div className="h-1.5 flex-1 rounded-full bg-muted">
+                        <div
+                          className="h-1.5 rounded-full bg-primary"
+                          style={{ width: `${insight.confidence_score * 100}%` }}
+                        />
+                      </div>
+                      <span className="text-xs text-muted-foreground tabular-nums">
+                        {(insight.confidence_score * 100).toFixed(0)}%
+                      </span>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             ))
           )}
         </div>
 
         {/* Detail Panel */}
         {selectedInsight && (
-          <div style={cardStyle}>
-            <h3 style={{ fontSize: 18, fontWeight: 600, color: "#f1f5f9", marginBottom: 16 }}>
-              {selectedInsight.title}
-            </h3>
-            <div
-              style={{
-                fontSize: 14,
-                color: "#cbd5e1",
-                lineHeight: 1.7,
-                marginBottom: 24,
-                whiteSpace: "pre-wrap",
-              }}
-            >
-              {selectedInsight.detailed_analysis}
-            </div>
-
-            {parseActions(selectedInsight.recommended_actions).length > 0 && (
-              <div>
-                <h4 style={{ fontSize: 14, fontWeight: 600, color: "#f1f5f9", marginBottom: 12 }}>
-                  Recommended Actions
-                </h4>
-                <ul style={{ listStyle: "none", padding: 0, display: "flex", flexDirection: "column", gap: 8 }}>
-                  {parseActions(selectedInsight.recommended_actions).map((action, i) => (
-                    <li
-                      key={i}
-                      style={{
-                        padding: "10px 14px",
-                        background: "#0f172a",
-                        borderRadius: 8,
-                        fontSize: 13,
-                        color: "#e2e8f0",
-                        borderLeft: "3px solid #3b82f6",
-                      }}
-                    >
-                      {action}
-                    </li>
-                  ))}
-                </ul>
+          <Card className="sticky top-24 self-start">
+            <CardHeader>
+              <div className="flex items-start justify-between gap-2">
+                <CardTitle className="text-base">{selectedInsight.title}</CardTitle>
+                <Button variant="ghost" size="icon" onClick={() => setSelectedInsight(null)} className="h-8 w-8 shrink-0">
+                  <X className="h-4 w-4" />
+                </Button>
               </div>
-            )}
-          </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+                {selectedInsight.detailed_analysis}
+              </div>
+
+              {parseActions(selectedInsight.recommended_actions).length > 0 && (
+                <div>
+                  <h4 className="mb-3 text-sm font-semibold text-foreground">Recommended Actions</h4>
+                  <div className="space-y-2">
+                    {parseActions(selectedInsight.recommended_actions).map((action, i) => (
+                      <div
+                        key={i}
+                        className="rounded-lg border-l-[3px] border-l-primary bg-muted/50 px-4 py-2.5 text-sm text-foreground"
+                      >
+                        {action}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         )}
       </div>
     </div>
