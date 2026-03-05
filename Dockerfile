@@ -12,10 +12,7 @@ RUN pip install --no-cache-dir .
 COPY backend/ ./backend/
 COPY alembic/ ./alembic/
 COPY alembic.ini ./
-COPY entrypoint.sh ./
-
-RUN chmod +x entrypoint.sh
 
 EXPOSE 8000
 
-CMD ["./entrypoint.sh"]
+CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]

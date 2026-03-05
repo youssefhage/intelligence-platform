@@ -22,6 +22,37 @@ from backend.core.logging import setup_logging
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     setup_logging()
+    # Run migrations on startup
+    try:
+        import subprocess
+        result = subprocess.run(
+            ["alembic", "upgrade", "head"],
+            capture_output=True, text=True, timeout=60
+        )
+        if result.returncode == 0:
+            print("Migrations applied successfully")
+        else:
+            print(f"Migration warning: {result.stderr[:500]}")
+    except Exception as e:
+        print(f"Migration skipped: {e}")
+
+    # Seed data if empty
+    try:
+        from sqlalchemy import text
+        from backend.core.database import async_session
+        async with async_session() as db:
+            row = await db.execute(text("SELECT COUNT(*) FROM commodities"))
+            count = row.scalar()
+            if count == 0:
+                from backend.seed_data import seed_commodities_and_prices, seed_suppliers
+                await seed_commodities_and_prices(db)
+                await seed_suppliers(db)
+                print("Database seeded successfully")
+            else:
+                print(f"Database has {count} commodities, skipping seed")
+    except Exception as e:
+        print(f"Seed skipped: {e}")
+
     yield
 
 
