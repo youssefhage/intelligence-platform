@@ -16,7 +16,13 @@ from backend.api.routes import (
     webhooks,
 )
 from backend.core.config import settings
+from backend.core.database import Base, engine, async_session
 from backend.core.logging import setup_logging
+from backend.models import (  # noqa: F401 - ensure all models registered with Base
+    Commodity, CommodityPrice, Product, ProductPriceHistory,
+    Supplier, SupplierRiskAssessment, Alert, InventorySnapshot,
+    SalesRecord, MarketInsight,
+)
 
 
 @asynccontextmanager
@@ -25,9 +31,6 @@ async def lifespan(app: FastAPI):
 
     # Create tables using SQLAlchemy metadata (works even without alembic migrations)
     try:
-        from backend.core.database import engine, Base
-        from backend.models import *  # noqa: F401,F403 - ensure all models registered
-
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
         print("Database tables ensured")
@@ -51,7 +54,6 @@ async def lifespan(app: FastAPI):
     # Seed data if empty
     try:
         from sqlalchemy import text
-        from backend.core.database import async_session
         async with async_session() as db:
             row = await db.execute(text("SELECT COUNT(*) FROM commodities"))
             count = row.scalar()
