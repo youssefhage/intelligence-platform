@@ -1,8 +1,6 @@
 services:
   db:
     image: postgres:16-alpine
-    env_file:
-      - .env
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-fmcg_intelligence}
       POSTGRES_USER: ${POSTGRES_USER:-fmcg}
@@ -31,13 +29,19 @@ services:
 
   backend:
     build: .
-    env_file:
-      - .env
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-fmcg}:${POSTGRES_PASSWORD:-fmcg_secret}@db:5432/${POSTGRES_DB:-fmcg_intelligence}
       DATABASE_URL_SYNC: postgresql://${POSTGRES_USER:-fmcg}:${POSTGRES_PASSWORD:-fmcg_secret}@db:5432/${POSTGRES_DB:-fmcg_intelligence}
       REDIS_URL: redis://redis:6379/0
       APP_ENV: production
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      WORLD_BANK_API_URL: ${WORLD_BANK_API_URL:-https://api.worldbank.org/v2}
+      FAO_API_URL: ${FAO_API_URL:-https://www.fao.org/faostat/api/v1}
+      APP_SECRET_KEY: ${APP_SECRET_KEY:-change-me}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      DEFAULT_CURRENCY: ${DEFAULT_CURRENCY:-USD}
+      SECONDARY_CURRENCY: ${SECONDARY_CURRENCY:-LBP}
+      LBP_EXCHANGE_RATE: ${LBP_EXCHANGE_RATE:-89500}
     depends_on:
       db:
         condition: service_healthy
@@ -46,7 +50,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.fmcg-backend.rule=Host(`${BACKEND_DOMAIN}`) || (Host(`${FRONTEND_DOMAIN}`) && PathPrefix(`/api`))"
-      - "traefik.http.routers.fmcg-backend.entrypoints=websecure"
+      - "traefik.http.routers.fmcg-backend.entrypoints=web,websecure"
       - "traefik.http.routers.fmcg-backend.tls.certResolver=letsencrypt"
       - "traefik.http.services.fmcg-backend.loadbalancer.server.port=8000"
     networks:
@@ -61,7 +65,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.fmcg-frontend.rule=Host(`${FRONTEND_DOMAIN}`)"
-      - "traefik.http.routers.fmcg-frontend.entrypoints=websecure"
+      - "traefik.http.routers.fmcg-frontend.entrypoints=web,websecure"
       - "traefik.http.routers.fmcg-frontend.tls.certResolver=letsencrypt"
       - "traefik.http.services.fmcg-frontend.loadbalancer.server.port=80"
     networks:
