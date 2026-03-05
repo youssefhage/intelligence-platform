@@ -22,7 +22,19 @@ from backend.core.logging import setup_logging
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     setup_logging()
-    # Run migrations on startup
+
+    # Create tables using SQLAlchemy metadata (works even without alembic migrations)
+    try:
+        from backend.core.database import engine, Base
+        from backend.models import *  # noqa: F401,F403 - ensure all models registered
+
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        print("Database tables ensured")
+    except Exception as e:
+        print(f"Table creation warning: {e}")
+
+    # Also try alembic stamp if tables were just created
     try:
         import subprocess
         result = subprocess.run(
@@ -30,11 +42,11 @@ async def lifespan(app: FastAPI):
             capture_output=True, text=True, timeout=60
         )
         if result.returncode == 0:
-            print("Migrations applied successfully")
+            print("Alembic migrations applied")
         else:
-            print(f"Migration warning: {result.stderr[:500]}")
+            print(f"Alembic note: {result.stderr[:200]}")
     except Exception as e:
-        print(f"Migration skipped: {e}")
+        print(f"Alembic skipped: {e}")
 
     # Seed data if empty
     try:

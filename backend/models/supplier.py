@@ -1,7 +1,7 @@
 import enum
 from datetime import datetime
 
-from sqlalchemy import DateTime, Enum, Float, Integer, String, Text, func
+from sqlalchemy import DateTime, Enum, Float, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.core.database import Base
@@ -45,7 +45,7 @@ class SupplierRiskAssessment(Base):
     __tablename__ = "supplier_risk_assessments"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    supplier_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
+    supplier_id: Mapped[int] = mapped_column(Integer, ForeignKey("suppliers.id"), nullable=False, index=True)
     risk_level: Mapped[RiskLevel] = mapped_column(Enum(RiskLevel), nullable=False)
     risk_factors: Mapped[str] = mapped_column(Text, nullable=False)  # JSON list of factors
     geopolitical_risk: Mapped[float] = mapped_column(Float, nullable=True)  # 0-100

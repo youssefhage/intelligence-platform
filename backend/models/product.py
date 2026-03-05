@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, Float, Integer, String, Text, func
+from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.core.database import Base
@@ -38,7 +38,7 @@ class ProductPriceHistory(Base):
     __tablename__ = "product_price_history"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    product_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
+    product_id: Mapped[int] = mapped_column(Integer, ForeignKey("products.id"), nullable=False, index=True)
     cost_usd: Mapped[float] = mapped_column(Float, nullable=False)
     sell_price_usd: Mapped[float] = mapped_column(Float, nullable=True)
     margin_percent: Mapped[float] = mapped_column(Float, nullable=True)
