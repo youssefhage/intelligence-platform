@@ -47,12 +47,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.fmcg-backend.rule=Host(`${BACKEND_DOMAIN}`) || (Host(`${FRONTEND_DOMAIN}`) && PathPrefix(`/api`))"
-      - "traefik.http.routers.fmcg-backend.entrypoints=web,websecure"
-      - "traefik.http.routers.fmcg-backend.tls.certResolver=letsencrypt"
-      - "traefik.http.services.fmcg-backend.loadbalancer.server.port=8000"
     networks:
       - dokploy-network
 
@@ -62,12 +56,6 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - backend
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.fmcg-frontend.rule=Host(`${FRONTEND_DOMAIN}`)"
-      - "traefik.http.routers.fmcg-frontend.entrypoints=web,websecure"
-      - "traefik.http.routers.fmcg-frontend.tls.certResolver=letsencrypt"
-      - "traefik.http.services.fmcg-frontend.loadbalancer.server.port=80"
     networks:
       - dokploy-network
 
