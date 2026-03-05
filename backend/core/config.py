@@ -18,11 +18,13 @@ class Settings(BaseSettings):
     erp_base_url: str = "http://localhost:8080/api"
     erp_api_key: str = ""
     erp_sync_interval_minutes: int = 15
+    erp_webhook_secret: str = ""
 
     # POS Integration
     pos_base_url: str = "http://localhost:9090/api"
     pos_api_key: str = ""
     pos_sync_interval_minutes: int = 5
+    pos_webhook_secret: str = ""
 
     # Application
     app_env: str = "development"
@@ -35,6 +37,27 @@ class Settings(BaseSettings):
     default_currency: str = "USD"
     secondary_currency: str = "LBP"
     lbp_exchange_rate: float = 89500.0
+
+    # WhatsApp Business API
+    whatsapp_api_token: str = ""
+    whatsapp_phone_number_id: str = ""
+    whatsapp_recipients: list[str] = []
+
+    # Email / SMTP
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = ""
+    email_from_address: str = "intelligence@fmcg-platform.com"
+    email_recipients: list[str] = []
+
+    # Slack
+    slack_webhook_url: str = ""
+    slack_channel: str = "#intelligence-alerts"
+
+    # Telegram
+    telegram_bot_token: str = ""
+    telegram_chat_id: str = ""
 
     model_config = {"env_file": ".env", "case_sensitive": False}
 

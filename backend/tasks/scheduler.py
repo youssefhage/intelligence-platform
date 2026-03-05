@@ -48,14 +48,86 @@ async def sync_pos_sales():
 
 
 async def fetch_commodity_prices():
-    """Periodically fetch global commodity prices."""
+    """Periodically fetch global commodity prices from multiple sources."""
     async with async_session() as db:
-        tracker = CommodityTracker(db)
+        from backend.services.market_data.real_connectors import EnhancedCommodityTracker
+
+        tracker = EnhancedCommodityTracker(db)
         try:
-            await tracker.fetch_world_bank_prices()
-            logger.info("Scheduled commodity price fetch complete")
+            result = await tracker.fetch_all_prices()
+            await tracker.check_price_alerts()
+            logger.info("Scheduled multi-source commodity price fetch complete", **result)
+        except Exception as e:
+            logger.error("Commodity price fetch failed, falling back", error=str(e))
+            # Fallback to basic tracker
+            basic_tracker = CommodityTracker(db)
+            try:
+                await basic_tracker.fetch_world_bank_prices()
+            finally:
+                await basic_tracker.close()
         finally:
             await tracker.close()
+
+
+async def update_currency_rates():
+    """Periodically fetch USD/LBP exchange rates."""
+    async with async_session() as db:
+        from backend.services.market_data.currency_tracker import CurrencyTracker
+
+        tracker = CurrencyTracker(db)
+        try:
+            await tracker.fetch_current_rates()
+            await tracker.check_rate_movement()
+            logger.info("Currency rates updated")
+        except Exception as e:
+            logger.error("Currency rate update failed", error=str(e))
+        finally:
+            await tracker.close()
+
+
+async def check_port_status():
+    """Periodically check Lebanese port operational status."""
+    async with async_session() as db:
+        from backend.services.market_data.port_tracker import PortTracker
+
+        tracker = PortTracker(db)
+        try:
+            await tracker.check_port_status()
+            logger.info("Port status check complete")
+        except Exception as e:
+            logger.error("Port status check failed", error=str(e))
+        finally:
+            await tracker.close()
+
+
+async def run_margin_analysis():
+    """Periodically analyze product margins for erosion."""
+    async with async_session() as db:
+        from backend.services.ai_engine.margin_analyzer import MarginAnalyzer
+
+        analyzer = MarginAnalyzer(db)
+        try:
+            result = await analyzer.run_full_analysis()
+            logger.info(
+                "Margin analysis complete",
+                negative=result["negative_margin_count"],
+                eroding=result["eroding_margin_count"],
+            )
+        except Exception as e:
+            logger.error("Margin analysis failed", error=str(e))
+
+
+async def generate_reorder_suggestions():
+    """Periodically generate auto-reorder suggestions."""
+    async with async_session() as db:
+        from backend.services.ai_engine.margin_analyzer import AutoReorderEngine
+
+        engine = AutoReorderEngine(db)
+        try:
+            suggestions = await engine.generate_reorder_suggestions()
+            logger.info("Reorder suggestions generated", count=len(suggestions))
+        except Exception as e:
+            logger.error("Reorder suggestion generation failed", error=str(e))
 
 
 async def run_supply_chain_assessments():
@@ -112,6 +184,30 @@ def setup_scheduler():
         run_supply_chain_assessments,
         trigger=IntervalTrigger(hours=24),
         id="run_supply_chain_assessments",
+        replace_existing=True,
+    )
+    scheduler.add_job(
+        update_currency_rates,
+        trigger=IntervalTrigger(hours=4),
+        id="update_currency_rates",
+        replace_existing=True,
+    )
+    scheduler.add_job(
+        check_port_status,
+        trigger=IntervalTrigger(hours=12),
+        id="check_port_status",
+        replace_existing=True,
+    )
+    scheduler.add_job(
+        run_margin_analysis,
+        trigger=IntervalTrigger(hours=12),
+        id="run_margin_analysis",
+        replace_existing=True,
+    )
+    scheduler.add_job(
+        generate_reorder_suggestions,
+        trigger=IntervalTrigger(hours=8),
+        id="generate_reorder_suggestions",
         replace_existing=True,
     )
     scheduler.start()

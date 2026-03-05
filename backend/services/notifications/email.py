@@ -1,0 +1,161 @@
+"""Email notification service for daily digests and critical alerts."""
+
+import json
+import smtplib
+from datetime import datetime
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
+import structlog
+
+from backend.core.config import settings
+
+logger = structlog.get_logger()
+
+
+class EmailNotifier:
+    """Sends email notifications and daily digest reports."""
+
+    def __init__(self):
+        self.smtp_host = settings.smtp_host
+        self.smtp_port = settings.smtp_port
+        self.smtp_user = settings.smtp_user
+        self.smtp_password = settings.smtp_password
+        self.from_address = settings.email_from_address
+        self.recipients = settings.email_recipients
+
+    async def send(
+        self,
+        title: str,
+        message: str,
+        severity: str,
+        action_recommended: str | None = None,
+        priority: str = "medium",
+    ) -> dict:
+        """Send an alert notification via email."""
+        severity_colors = {
+            "critical": "#dc2626",
+            "warning": "#f59e0b",
+            "info": "#3b82f6",
+        }
+        color = severity_colors.get(severity, "#3b82f6")
+
+        html = f"""
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background: {color}; color: white; padding: 16px 24px; border-radius: 8px 8px 0 0;">
+                <h2 style="margin: 0; font-size: 18px;">{severity.upper()} ALERT</h2>
+            </div>
+            <div style="background: #f8fafc; padding: 24px; border: 1px solid #e2e8f0; border-top: none;">
+                <h3 style="margin: 0 0 12px 0; color: #1e293b;">{title}</h3>
+                <p style="color: #475569; line-height: 1.6;">{message}</p>
+                {"<div style='background: #eff6ff; border-left: 4px solid #3b82f6; padding: 12px 16px; margin-top: 16px;'><strong>Recommended Action:</strong><br>" + action_recommended + "</div>" if action_recommended else ""}
+                <p style="color: #94a3b8; font-size: 12px; margin-top: 24px;">
+                    FMCG Intelligence Platform — {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}
+                </p>
+            </div>
+        </div>
+        """
+
+        subject = f"[{severity.upper()}] {title}"
+        return self._send_email(subject, html)
+
+    async def send_digest(self, briefing_content: dict) -> dict:
+        """Send daily intelligence briefing as a formatted email digest."""
+        title = briefing_content.get("title", "Daily Intelligence Briefing")
+        summary = briefing_content.get("summary", "")
+        analysis = briefing_content.get("detailed_analysis", "")
+
+        actions = briefing_content.get("recommended_actions", "[]")
+        if isinstance(actions, str):
+            try:
+                actions = json.loads(actions)
+            except json.JSONDecodeError:
+                actions = [actions] if actions else []
+
+        actions_html = ""
+        if actions:
+            items = "".join(
+                f'<li style="margin-bottom: 8px; color: #334155;">{a}</li>'
+                for a in actions
+            )
+            actions_html = f"""
+            <div style="margin-top: 24px;">
+                <h3 style="color: #1e293b; margin-bottom: 12px;">Key Actions</h3>
+                <ol style="padding-left: 20px; line-height: 1.6;">{items}</ol>
+            </div>
+            """
+
+        html = f"""
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 700px; margin: 0 auto;">
+            <div style="background: linear-gradient(135deg, #0f172a, #1e3a5f); color: white; padding: 24px 32px; border-radius: 8px 8px 0 0;">
+                <h1 style="margin: 0; font-size: 22px;">FMCG Intelligence Briefing</h1>
+                <p style="margin: 8px 0 0 0; opacity: 0.8; font-size: 14px;">
+                    {datetime.utcnow().strftime('%A, %B %d, %Y')}
+                </p>
+            </div>
+            <div style="background: white; padding: 32px; border: 1px solid #e2e8f0; border-top: none;">
+                <div style="background: #f0f9ff; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
+                    <h3 style="color: #0c4a6e; margin: 0 0 8px 0;">Executive Summary</h3>
+                    <p style="color: #334155; line-height: 1.6; margin: 0;">{summary}</p>
+                </div>
+
+                <div style="margin-bottom: 24px;">
+                    <h3 style="color: #1e293b; margin-bottom: 12px;">Detailed Analysis</h3>
+                    <div style="color: #475569; line-height: 1.7; white-space: pre-wrap;">{analysis}</div>
+                </div>
+
+                {actions_html}
+
+                <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 32px 0 16px 0;">
+                <p style="color: #94a3b8; font-size: 12px; text-align: center;">
+                    Generated by FMCG Intelligence Platform<br>
+                    {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}
+                </p>
+            </div>
+        </div>
+        """
+
+        subject = f"Daily Briefing — {datetime.utcnow().strftime('%b %d, %Y')}"
+        return self._send_email(subject, html)
+
+    def _send_email(self, subject: str, html_body: str) -> dict:
+        """Send email via SMTP."""
+        if not self.smtp_host:
+            logger.warning("Email not configured, skipping send")
+            return {"status": "skipped", "reason": "SMTP not configured"}
+
+        sent_to = []
+        errors = []
+
+        try:
+            msg = MIMEMultipart("alternative")
+            msg["From"] = self.from_address
+            msg["Subject"] = subject
+            msg.attach(MIMEText(html_body, "html"))
+
+            with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
+                server.ehlo()
+                if self.smtp_port != 25:
+                    server.starttls()
+                    server.ehlo()
+                if self.smtp_user and self.smtp_password:
+                    server.login(self.smtp_user, self.smtp_password)
+
+                for recipient in self.recipients:
+                    try:
+                        msg["To"] = recipient
+                        server.sendmail(self.from_address, recipient, msg.as_string())
+                        sent_to.append(recipient)
+                    except Exception as e:
+                        errors.append(f"{recipient}: {e}")
+                        logger.error(
+                            "Email send failed",
+                            recipient=recipient,
+                            error=str(e),
+                        )
+
+        except Exception as e:
+            logger.error("SMTP connection failed", error=str(e))
+            return {"status": "error", "error": str(e)}
+
+        return {"sent_to": len(sent_to), "errors": errors}

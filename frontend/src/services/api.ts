@@ -61,4 +61,45 @@ export const api = {
   syncPOSSales: () => postJSON("/sync/pos/sales"),
   getTopSelling: (days = 7) => fetchJSON(`/sync/pos/top-selling?days=${days}`),
   getLowStock: () => fetchJSON("/sync/erp/low-stock"),
+
+  // Analytics — Margin
+  getMarginAnalysis: () => fetchJSON("/analytics/margin/analysis"),
+
+  // Analytics — Demand
+  getDemandForecast: (productId: number, days = 30) =>
+    fetchJSON(`/analytics/demand/product/${productId}?horizon_days=${days}`),
+  getCategoryDemand: (category: string, days = 30) =>
+    fetchJSON(`/analytics/demand/category/${category}?horizon_days=${days}`),
+
+  // Analytics — Competitors
+  recordCompetitorPrice: (data: unknown) =>
+    postJSON("/analytics/competitors/prices", data),
+  recordBulkCompetitorPrices: (data: unknown) =>
+    postJSON("/analytics/competitors/prices/bulk", data),
+  getCompetitivePosition: (productId?: number) =>
+    fetchJSON(`/analytics/competitors/position${productId ? `?product_id=${productId}` : ""}`),
+
+  // Analytics — Scenarios
+  runScenario: (scenarioType: string, parameters: Record<string, unknown>) =>
+    postJSON("/analytics/scenarios/run", { scenario_type: scenarioType, parameters }),
+  getScenarioTypes: () => fetchJSON("/analytics/scenarios/types"),
+
+  // Analytics — Currency
+  getCurrencyRates: () => fetchJSON("/analytics/currency/rates"),
+
+  // Analytics — Ports
+  getPortStatus: () => fetchJSON("/analytics/ports/status"),
+  getShippingRoutes: () => fetchJSON("/analytics/ports/routes"),
+  getImportTimeline: (origin: string, commodity: string) =>
+    fetchJSON(`/analytics/ports/timeline?origin_region=${encodeURIComponent(origin)}&commodity_name=${encodeURIComponent(commodity)}`),
+
+  // Analytics — Reorder
+  getReorderSuggestions: () => fetchJSON("/analytics/reorder/suggestions"),
+
+  // Notifications
+  getNotificationChannels: () => fetchJSON("/notifications/channels"),
+  sendTestNotification: (channels: string[], message: string) =>
+    postJSON("/notifications/test", { channels, message }),
+  sendDailyDigest: (channels?: string[]) =>
+    postJSON("/notifications/daily-digest", channels ? { channels } : undefined),
 };

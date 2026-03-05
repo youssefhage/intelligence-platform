@@ -5,7 +5,16 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.api.routes import commodities, dashboard, intelligence, suppliers, sync
+from backend.api.routes import (
+    analytics,
+    commodities,
+    dashboard,
+    intelligence,
+    notifications,
+    suppliers,
+    sync,
+    webhooks,
+)
 from backend.core.config import settings
 from backend.core.logging import setup_logging
 
@@ -28,7 +37,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173"],
+    allow_origins=["http://localhost:3000", "http://localhost:5173", "*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -40,6 +49,9 @@ app.include_router(commodities.router, prefix="/api")
 app.include_router(suppliers.router, prefix="/api")
 app.include_router(intelligence.router, prefix="/api")
 app.include_router(sync.router, prefix="/api")
+app.include_router(analytics.router, prefix="/api")
+app.include_router(webhooks.router, prefix="/api")
+app.include_router(notifications.router, prefix="/api")
 
 
 @app.get("/api/health")
