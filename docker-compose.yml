@@ -64,9 +64,6 @@ services:
     labels:
       - traefik.enable=true
       - traefik.docker.network=dokploy-network
-    depends_on:
-      backend:
-        condition: service_started
     networks:
       - dokploy-network
 
