@@ -29,6 +29,9 @@ services:
 
   backend:
     build: .
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=dokploy-network
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-fmcg}:${POSTGRES_PASSWORD:-fmcg_secret}@db:5432/${POSTGRES_DB:-fmcg_intelligence}
       DATABASE_URL_SYNC: postgresql://${POSTGRES_USER:-fmcg}:${POSTGRES_PASSWORD:-fmcg_secret}@db:5432/${POSTGRES_DB:-fmcg_intelligence}
@@ -47,13 +50,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.fmcg-backend.rule=Host(`${FRONTEND_DOMAIN}`) && PathPrefix(`/api`)
-      - traefik.http.routers.fmcg-backend.entrypoints=web
-      - traefik.http.services.fmcg-backend.loadbalancer.server.port=8000
-      - traefik.http.routers.fmcg-backend.service=fmcg-backend
-      - traefik.docker.network=dokploy-network
     networks:
       - dokploy-network
 
@@ -61,16 +57,11 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    depends_on:
-      - backend
     labels:
       - traefik.enable=true
-      - traefik.http.routers.fmcg-frontend.rule=Host(`${FRONTEND_DOMAIN}`)
-      - traefik.http.routers.fmcg-frontend.entrypoints=web
-      - traefik.http.services.fmcg-frontend.loadbalancer.server.port=80
-      - traefik.http.routers.fmcg-frontend.service=fmcg-frontend
-      - traefik.http.routers.fmcg-frontend.priority=1
       - traefik.docker.network=dokploy-network
+    depends_on:
+      - backend
     networks:
       - dokploy-network
 
