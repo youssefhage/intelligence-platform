@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     rm -rf /var/lib/apt/lists/*
 
 COPY pyproject.toml ./
-ARG CACHE_BUST=5
+ARG CACHE_BUST=6
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN pip install --no-cache-dir . && echo "=== Core deps installed ==="
 RUN pip install --no-cache-dir prophet || echo "Prophet not available, forecasting will use fallback"
