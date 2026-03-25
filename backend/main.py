@@ -39,17 +39,23 @@ async def lifespan(app: FastAPI):
         print(f"Logging setup warning: {e}")
 
     # Ensure PostgreSQL enum types have all values before creating/altering tables
+    # ALTER TYPE ... ADD VALUE must run outside a transaction block
     try:
         from sqlalchemy import text as sa_text
-        async with engine.begin() as conn:
-            # Add missing enum values for commoditycategory
+        from sqlalchemy.ext.asyncio import create_async_engine as _cae
+        raw_engine = _cae(
+            str(engine.url),
+            isolation_level="AUTOCOMMIT",
+        )
+        async with raw_engine.connect() as conn:
             for val in ["beverage", "packaging", "cleaning", "shipping", "currency", "other"]:
                 try:
                     await conn.execute(
                         sa_text(f"ALTER TYPE commoditycategory ADD VALUE IF NOT EXISTS '{val}'")
                     )
                 except Exception:
-                    pass  # Value already exists or enum doesn't exist yet
+                    pass
+        await raw_engine.dispose()
         print("Enum types updated")
     except Exception as e:
         print(f"Enum update note: {e}")

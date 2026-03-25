@@ -42,12 +42,16 @@ async def get_news_feed(
 @router.post("/fetch")
 async def trigger_news_fetch(db: AsyncSession = Depends(get_db)):
     """Manually trigger RSS feed fetch."""
+    import traceback
     from backend.services.news.rss_fetcher import RSSFetcher
 
     fetcher = RSSFetcher(db)
     try:
         result = await fetcher.fetch_and_store()
         return result
+    except Exception as e:
+        traceback.print_exc()
+        return {"stored": 0, "skipped": 0, "total_fetched": 0, "error": str(e)}
     finally:
         await fetcher.close()
 

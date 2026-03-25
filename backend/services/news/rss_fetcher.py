@@ -136,7 +136,7 @@ class RSSFetcher:
                 title=article["title"],
                 url=article["url"],
                 source=article["source"],
-                published_at=article.get("published_at"),
+                published_at=self._strip_tz(article.get("published_at")),
                 summary=article.get("summary"),
                 matched_commodities=",".join(matched) if matched else None,
             )
@@ -233,6 +233,13 @@ class RSSFetcher:
             logger.warning("RSS parse error", source=source_name, error=str(e))
 
         return articles
+
+    @staticmethod
+    def _strip_tz(dt: datetime | None) -> datetime | None:
+        """Strip timezone info for SQLAlchemy DateTime without tz."""
+        if dt is None:
+            return None
+        return dt.replace(tzinfo=None) if dt.tzinfo else dt
 
     def _match_commodities(self, text: str) -> list[str]:
         """Find commodity matches in article text."""
