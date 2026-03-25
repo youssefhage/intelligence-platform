@@ -37,9 +37,14 @@ services:
       DATABASE_URL_SYNC: postgresql://${POSTGRES_USER:-fmcg}:${POSTGRES_PASSWORD:-fmcg_secret}@db:5432/${POSTGRES_DB:-fmcg_intelligence}
       REDIS_URL: redis://redis:6379/0
       APP_ENV: production
+      AI_API_KEY: ${AI_API_KEY:-}
+      AI_BASE_URL: ${AI_BASE_URL:-https://api.moonshot.ai/v1}
+      AI_MODEL: ${AI_MODEL:-moonshot-v1-auto}
+      FRED_API_KEY: ${FRED_API_KEY:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       WORLD_BANK_API_URL: ${WORLD_BANK_API_URL:-https://api.worldbank.org/v2}
       FAO_API_URL: ${FAO_API_URL:-https://www.fao.org/faostat/api/v1}
+      IMF_API_URL: ${IMF_API_URL:-https://dataservices.imf.org/REST/SDMX_JSON.svc}
       APP_SECRET_KEY: ${APP_SECRET_KEY:-change-me}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       DEFAULT_CURRENCY: ${DEFAULT_CURRENCY:-USD}
