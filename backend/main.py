@@ -38,6 +38,22 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print(f"Logging setup warning: {e}")
 
+    # Ensure PostgreSQL enum types have all values before creating/altering tables
+    try:
+        from sqlalchemy import text as sa_text
+        async with engine.begin() as conn:
+            # Add missing enum values for commoditycategory
+            for val in ["beverage", "packaging", "cleaning", "shipping", "currency", "other"]:
+                try:
+                    await conn.execute(
+                        sa_text(f"ALTER TYPE commoditycategory ADD VALUE IF NOT EXISTS '{val}'")
+                    )
+                except Exception:
+                    pass  # Value already exists or enum doesn't exist yet
+        print("Enum types updated")
+    except Exception as e:
+        print(f"Enum update note: {e}")
+
     # Create tables using SQLAlchemy metadata (works even without alembic migrations)
     try:
         async with engine.begin() as conn:

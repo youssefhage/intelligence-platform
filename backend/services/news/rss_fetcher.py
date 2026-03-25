@@ -13,33 +13,27 @@ from backend.models.news import NewsArticle
 
 logger = structlog.get_logger()
 
-# RSS feed sources — reliable free feeds that don't block servers
+# RSS feed sources — Google News RSS with targeted queries
 RSS_FEEDS = [
-    # Reuters commodity news
     {
-        "name": "Reuters - Commodities",
-        "url": "https://news.google.com/rss/search?q=commodities+prices+when:7d&hl=en-US&gl=US&ceid=US:en",
+        "name": "Commodity Prices",
+        "url": "https://news.google.com/rss/search?q=commodity+prices+oil+wheat+sugar+when:7d&hl=en-US&gl=US&ceid=US:en",
     },
     {
-        "name": "Reuters - Oil",
-        "url": "https://news.google.com/rss/search?q=crude+oil+brent+prices+when:7d&hl=en-US&gl=US&ceid=US:en",
+        "name": "Oil & Energy",
+        "url": "https://news.google.com/rss/search?q=crude+oil+brent+opec+energy+prices+when:7d&hl=en-US&gl=US&ceid=US:en",
     },
     {
-        "name": "Google News - Shipping Trade",
-        "url": "https://news.google.com/rss/search?q=shipping+freight+red+sea+trade+when:7d&hl=en-US&gl=US&ceid=US:en",
+        "name": "Shipping & Trade",
+        "url": "https://news.google.com/rss/search?q=shipping+freight+red+sea+container+trade+when:7d&hl=en-US&gl=US&ceid=US:en",
     },
     {
-        "name": "Google News - Food Commodities",
-        "url": "https://news.google.com/rss/search?q=wheat+rice+sugar+coffee+palm+oil+prices+when:7d&hl=en-US&gl=US&ceid=US:en",
-    },
-    # Reliable XML RSS feeds
-    {
-        "name": "CNBC - Commodities",
-        "url": "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=48722713",
+        "name": "Food & Agriculture",
+        "url": "https://news.google.com/rss/search?q=wheat+rice+sugar+coffee+palm+oil+food+prices+when:7d&hl=en-US&gl=US&ceid=US:en",
     },
     {
-        "name": "World Bank - News",
-        "url": "https://feeds.worldbank.org/rss/topic/commodities/rss.xml",
+        "name": "Middle East Economy",
+        "url": "https://news.google.com/rss/search?q=middle+east+trade+turkey+egypt+lebanon+economy+when:7d&hl=en-US&gl=US&ceid=US:en",
     },
 ]
 
