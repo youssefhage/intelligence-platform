@@ -69,10 +69,10 @@ export default function CommodityPanel() {
     }
   };
 
-  const gridColor = theme === "dark" ? "#334155" : "#e2e8f0";
-  const tickColor = theme === "dark" ? "#64748b" : "#94a3b8";
-  const tooltipBg = theme === "dark" ? "#1e293b" : "#ffffff";
-  const tooltipBorder = theme === "dark" ? "#334155" : "#e2e8f0";
+  const gridColor = theme === "dark" ? "#262626" : "#e5e5e5";
+  const tickColor = theme === "dark" ? "#737373" : "#a3a3a3";
+  const tooltipBg = theme === "dark" ? "#0a0a0a" : "#ffffff";
+  const tooltipBorder = theme === "dark" ? "#262626" : "#e5e5e5";
 
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">

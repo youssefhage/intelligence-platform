@@ -57,8 +57,8 @@ export default function LandedCostPanel() {
   );
 
   const { theme } = useTheme();
-  const gridColor = theme === "dark" ? "#334155" : "#e2e8f0";
-  const tickColor = theme === "dark" ? "#64748b" : "#94a3b8";
+  const gridColor = theme === "dark" ? "#262626" : "#e5e5e5";
+  const tickColor = theme === "dark" ? "#737373" : "#a3a3a3";
 
   const handleCalculate = async () => {
     setLoading(true);
@@ -220,7 +220,7 @@ export default function LandedCostPanel() {
                     <YAxis type="category" dataKey="name" tick={{ fill: tickColor, fontSize: 11 }} width={70} />
                     <Tooltip
                       formatter={(v: number) => [`$${v.toLocaleString()}`, "Cost"]}
-                      contentStyle={{ background: theme === "dark" ? "#1e293b" : "#fff", border: `1px solid ${gridColor}`, borderRadius: 8, fontSize: 12 }}
+                      contentStyle={{ background: theme === "dark" ? "#0a0a0a" : "#fff", border: `1px solid ${gridColor}`, borderRadius: 8, fontSize: 12 }}
                     />
                     <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]} />
                   </BarChart>

@@ -32,9 +32,9 @@ export default function SupplyRouteMap() {
   const [selectedRoute, setSelectedRoute] = useState<string | null>(null);
   const { theme } = useTheme();
 
-  const mapBg = theme === "dark" ? "#0f172a" : "#f1f5f9";
-  const landFill = theme === "dark" ? "#1e293b" : "#e2e8f0";
-  const landStroke = theme === "dark" ? "#334155" : "#cbd5e1";
+  const mapBg = theme === "dark" ? "#000000" : "#f5f5f5";
+  const landFill = theme === "dark" ? "#141414" : "#e5e5e5";
+  const landStroke = theme === "dark" ? "#262626" : "#d4d4d4";
 
   if (routes.loading) {
     return <Skeleton className="h-[400px] rounded-xl" />;
@@ -72,7 +72,7 @@ export default function SupplyRouteMap() {
                       strokeWidth={0.5}
                       style={{
                         default: { outline: "none" },
-                        hover: { outline: "none", fill: theme === "dark" ? "#334155" : "#cbd5e1" },
+                        hover: { outline: "none", fill: theme === "dark" ? "#1a1a1a" : "#d4d4d4" },
                         pressed: { outline: "none" },
                       }}
                     />
@@ -88,7 +88,7 @@ export default function SupplyRouteMap() {
                     key={route.id}
                     from={[route.origin.lng, route.origin.lat]}
                     to={[route.destination.lng, route.destination.lat]}
-                    stroke={isSelected ? "#3b82f6" : theme === "dark" ? "#64748b" : "#94a3b8"}
+                    stroke={isSelected ? "#3b82f6" : theme === "dark" ? "#525252" : "#a3a3a3"}
                     strokeWidth={isSelected ? 2.5 : 1.5}
                     strokeLinecap="round"
                     strokeDasharray={isSelected ? "none" : "4 2"}
@@ -120,7 +120,7 @@ export default function SupplyRouteMap() {
                       style={{
                         fontFamily: "system-ui",
                         fontSize: 10,
-                        fill: theme === "dark" ? "#e2e8f0" : "#1e293b",
+                        fill: theme === "dark" ? "#fafafa" : "#0a0a0a",
                         fontWeight: 600,
                       }}
                     >
@@ -139,7 +139,7 @@ export default function SupplyRouteMap() {
                   style={{
                     fontFamily: "system-ui",
                     fontSize: 11,
-                    fill: theme === "dark" ? "#f8fafc" : "#0f172a",
+                    fill: theme === "dark" ? "#fafafa" : "#0a0a0a",
                     fontWeight: 700,
                   }}
                 >
