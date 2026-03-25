@@ -139,7 +139,7 @@ class MorningBriefService:
         return {
             "commodity_id": commodity.id,
             "commodity_name": commodity.name,
-            "category": commodity.category.value,
+            "category": commodity.category,
             "unit": commodity.unit,
             "current_price_usd": round(current_price, 2),
             "week_change_pct": round(week_change_pct, 2) if week_change_pct is not None else None,
@@ -156,7 +156,7 @@ class MorningBriefService:
         return {
             "commodity_id": commodity.id,
             "commodity_name": commodity.name,
-            "category": commodity.category.value,
+            "category": commodity.category,
             "unit": commodity.unit,
             "current_price_usd": None,
             "week_change_pct": None,

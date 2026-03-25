@@ -439,7 +439,7 @@ class CommodityTracker:
                 {
                     "commodity_id": commodity.id,
                     "commodity_name": commodity.name,
-                    "category": commodity.category.value,
+                    "category": commodity.category,
                     "unit": commodity.unit,
                     "current_price_usd": latest_price.price_usd if latest_price else None,
                     "current_price_lbp": latest_price.price_lbp if latest_price else None,

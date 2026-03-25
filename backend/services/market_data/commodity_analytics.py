@@ -44,7 +44,7 @@ class CommodityAnalytics:
             return {
                 "commodity_id": commodity_id,
                 "commodity_name": commodity.name,
-                "category": commodity.category.value,
+                "category": commodity.category,
                 "price_history": [],
                 "ma_30": [],
                 "ma_90": [],
@@ -87,7 +87,7 @@ class CommodityAnalytics:
         return {
             "commodity_id": commodity_id,
             "commodity_name": commodity.name,
-            "category": commodity.category.value,
+            "category": commodity.category,
             "price_history": price_history,
             "volatility_current": round(current_vol, 2) if current_vol is not None else None,
             "volatility_level": vol_level,
@@ -132,7 +132,7 @@ class CommodityAnalytics:
 
         # Build prompt
         context = (
-            f"Commodity: {commodity.name} ({commodity.category.value})\n"
+            f"Commodity: {commodity.name} ({commodity.category})\n"
             f"Current price: ${current:.2f}/{commodity.unit}\n"
             f"90-day average: ${avg_90d:.2f}\n"
             f"vs 90d avg: {((current - avg_90d) / avg_90d * 100):+.1f}%\n"
