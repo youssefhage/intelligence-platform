@@ -11,14 +11,29 @@ logger = structlog.get_logger()
 
 # FRED series IDs for relevant economic indicators
 FRED_SERIES_MAP = {
-    "BRENT": "DCOILBRENTEU",       # Crude Oil Prices: Brent - Europe (daily)
-    "DIESEL": "GASDESW",            # US No 2 Diesel Retail Prices (weekly)
-    "HDPE": "WPU072104",            # PPI: HDPE resins
-    "PET": "WPU07210603",           # PPI: PET resins
-    "PP": "WPU072105",              # PPI: Polypropylene resins
-    "ALUMINUM": "PAPTS",            # Global price of Aluminum (monthly)
-    "PAPER_CARDBOARD": "WPU0911",   # PPI: Paper and paperboard
-    "NATURAL_GAS": "DHHNGSP",       # Henry Hub Natural Gas Spot Price
+    # Energy (daily/weekly)
+    "BRENT": "DCOILBRENTEU",
+    "DIESEL": "GASDESW",
+    # Grains & Staples (monthly, IMF via FRED)
+    "WHEAT_CBOT": "PWHEAMTUSDM",
+    "RICE": "PRICENPQUSDM",
+    "SUGAR_RAW": "PSUGAISAUSDM",
+    # Oils (monthly, IMF via FRED)
+    "PALM_OIL": "PPOILUSDM",
+    "SOYBEAN_OIL": "PSOILUSDM",
+    "SUNFLOWER_OIL": "PSUNOUSDM",
+    "OLIVE_OIL": "POLVOILUSDM",
+    # Beverages (monthly, IMF via FRED)
+    "COFFEE_ARABICA": "PCOFFOTMUSDM",
+    "COCOA": "PCOCOUSDM",
+    "TEA": "PTEAUSDM",
+    # Metals (monthly, IMF via FRED)
+    "TIN": "PTINUSDM",
+    # Packaging PPI indices (monthly)
+    "HDPE": "WPU072104",
+    "PET": "WPU07210603",
+    "PP": "WPU072105",
+    "PAPER_CARDBOARD": "WPU0911",
 }
 
 
