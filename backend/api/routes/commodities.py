@@ -138,6 +138,11 @@ async def get_anomalies(
 
 @router.post("/initialize")
 async def initialize_commodities(db: AsyncSession = Depends(get_db)):
-    tracker = CommodityTracker(db)
-    commodities = await tracker.ensure_all_commodities()
-    return {"initialized": len(commodities)}
+    import traceback
+    try:
+        tracker = CommodityTracker(db)
+        commodities = await tracker.ensure_all_commodities()
+        return {"initialized": len(commodities)}
+    except Exception as e:
+        traceback.print_exc()
+        return {"error": str(e), "type": type(e).__name__}
