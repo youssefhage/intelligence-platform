@@ -26,9 +26,8 @@ class Commodity(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(200), nullable=False, index=True)
-    category: Mapped[CommodityCategory] = mapped_column(
-        Enum(CommodityCategory, values_callable=lambda x: [e.value for e in x]),
-        nullable=False, index=True,
+    category: Mapped[str] = mapped_column(
+        String(50), nullable=False, index=True,
     )
     unit: Mapped[str] = mapped_column(String(50), nullable=False)  # kg, liter, ton, barrel
     origin_countries: Mapped[str] = mapped_column(Text, nullable=True)  # JSON list of countries

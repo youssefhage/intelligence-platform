@@ -10,7 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.core.config import settings
-from backend.models.commodity import Commodity, CommodityCategory, CommodityPrice
+from backend.models.commodity import Commodity, CommodityPrice
 
 logger = structlog.get_logger()
 
@@ -269,7 +269,7 @@ class CommodityAnalytics:
             select(Commodity)
             .where(Commodity.is_active.is_(True))
             .where(Commodity.id != commodity_id)
-            .where(Commodity.category.notin_([CommodityCategory.CURRENCY, CommodityCategory.SHIPPING]))
+            .where(Commodity.category.notin_(["currency", "shipping"]))
         )
         other_commodities = result.scalars().all()
 

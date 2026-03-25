@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.core.config import settings
-from backend.models.commodity import Commodity, CommodityCategory, CommodityPrice
+from backend.models.commodity import Commodity, CommodityPrice
 
 logger = structlog.get_logger()
 
@@ -18,7 +18,7 @@ DEFAULT_COMMODITIES = [
     # === GRAINS & STAPLES ===
     {
         "name": "Rice (Long Grain)",
-        "category": CommodityCategory.GRAIN,
+        "category": "grain",
         "unit": "ton",
         "origin_countries": json.dumps(["India", "Pakistan", "Thailand", "Vietnam"]),
         "sourcing_regions": json.dumps(["South Asia", "Southeast Asia"]),
@@ -26,7 +26,7 @@ DEFAULT_COMMODITIES = [
     },
     {
         "name": "Wheat",
-        "category": CommodityCategory.GRAIN,
+        "category": "grain",
         "unit": "ton",
         "origin_countries": json.dumps(["Turkey", "Ukraine", "Russia", "Romania"]),
         "sourcing_regions": json.dumps(["Black Sea", "Eastern Europe"]),
@@ -34,7 +34,7 @@ DEFAULT_COMMODITIES = [
     },
     {
         "name": "Maize",
-        "category": CommodityCategory.GRAIN,
+        "category": "grain",
         "unit": "ton",
         "origin_countries": json.dumps(["USA", "Argentina", "Brazil", "Ukraine"]),
         "sourcing_regions": json.dumps(["North America", "South America", "Black Sea"]),
@@ -42,7 +42,7 @@ DEFAULT_COMMODITIES = [
     },
     {
         "name": "Flour",
-        "category": CommodityCategory.GRAIN,
+        "category": "grain",
         "unit": "ton",
         "origin_countries": json.dumps(["Turkey", "Egypt", "Ukraine"]),
         "sourcing_regions": json.dumps(["Eastern Europe", "Middle East"]),
@@ -51,7 +51,7 @@ DEFAULT_COMMODITIES = [
     # === COOKING & FOOD OILS ===
     {
         "name": "Sunflower Oil",
-        "category": CommodityCategory.OIL,
+        "category": "oil",
         "unit": "ton",
         "origin_countries": json.dumps(["Ukraine", "Turkey", "Argentina"]),
         "sourcing_regions": json.dumps(["Black Sea", "South America"]),
@@ -59,7 +59,7 @@ DEFAULT_COMMODITIES = [
     },
     {
         "name": "Soybean Oil",
-        "category": CommodityCategory.OIL,
+        "category": "oil",
         "unit": "ton",
         "origin_countries": json.dumps(["Argentina", "Brazil", "USA"]),
         "sourcing_regions": json.dumps(["South America", "North America"]),
@@ -67,7 +67,7 @@ DEFAULT_COMMODITIES = [
     },
     {
         "name": "Palm Oil",
-        "category": CommodityCategory.OIL,
+        "category": "oil",
         "unit": "ton",
         "origin_countries": json.dumps(["Malaysia", "Indonesia"]),
         "sourcing_regions": json.dumps(["Southeast Asia"]),
@@ -75,7 +75,7 @@ DEFAULT_COMMODITIES = [
     },
     {
         "name": "Olive Oil",
-        "category": CommodityCategory.OIL,
+        "category": "oil",
         "unit": "ton",
         "origin_countries": json.dumps(["Spain", "Italy", "Tunisia", "Turkey"]),
         "sourcing_regions": json.dumps(["Mediterranean"]),
@@ -84,7 +84,7 @@ DEFAULT_COMMODITIES = [
     # === SUGAR ===
     {
         "name": "Sugar (Raw)",
-        "category": CommodityCategory.SUGAR,
+        "category": "sugar",
         "unit": "ton",
         "origin_countries": json.dumps(["Brazil", "India", "Thailand"]),
         "sourcing_regions": json.dumps(["South America", "South Asia"]),
@@ -93,7 +93,7 @@ DEFAULT_COMMODITIES = [
     # === BEVERAGES ===
     {
         "name": "Coffee (Arabica)",
-        "category": CommodityCategory.BEVERAGE,
+        "category": "beverage",
         "unit": "ton",
         "origin_countries": json.dumps(["Brazil", "Colombia", "Ethiopia"]),
         "sourcing_regions": json.dumps(["South America", "East Africa"]),
@@ -101,7 +101,7 @@ DEFAULT_COMMODITIES = [
     },
     {
         "name": "Coffee (Robusta)",
-        "category": CommodityCategory.BEVERAGE,
+        "category": "beverage",
         "unit": "ton",
         "origin_countries": json.dumps(["Vietnam", "Brazil", "Indonesia"]),
         "sourcing_regions": json.dumps(["Southeast Asia", "South America"]),
@@ -109,7 +109,7 @@ DEFAULT_COMMODITIES = [
     },
     {
         "name": "Tea",
-        "category": CommodityCategory.BEVERAGE,
+        "category": "beverage",
         "unit": "ton",
         "origin_countries": json.dumps(["Sri Lanka", "India", "Kenya", "China"]),
         "sourcing_regions": json.dumps(["South Asia", "East Africa", "East Asia"]),
@@ -117,7 +117,7 @@ DEFAULT_COMMODITIES = [
     },
     {
         "name": "Cocoa",
-        "category": CommodityCategory.BEVERAGE,
+        "category": "beverage",
         "unit": "ton",
         "origin_countries": json.dumps(["Ivory Coast", "Ghana", "Ecuador"]),
         "sourcing_regions": json.dumps(["West Africa", "South America"]),
@@ -126,7 +126,7 @@ DEFAULT_COMMODITIES = [
     # === DAIRY ===
     {
         "name": "Powdered Milk",
-        "category": CommodityCategory.DAIRY,
+        "category": "dairy",
         "unit": "ton",
         "origin_countries": json.dumps(["New Zealand", "Netherlands", "France"]),
         "sourcing_regions": json.dumps(["Oceania", "Western Europe"]),
@@ -134,7 +134,7 @@ DEFAULT_COMMODITIES = [
     },
     {
         "name": "Butter",
-        "category": CommodityCategory.DAIRY,
+        "category": "dairy",
         "unit": "ton",
         "origin_countries": json.dumps(["New Zealand", "Netherlands", "Ireland"]),
         "sourcing_regions": json.dumps(["Oceania", "Western Europe"]),
@@ -142,7 +142,7 @@ DEFAULT_COMMODITIES = [
     },
     {
         "name": "Cheese",
-        "category": CommodityCategory.DAIRY,
+        "category": "dairy",
         "unit": "ton",
         "origin_countries": json.dumps(["Netherlands", "France", "Germany"]),
         "sourcing_regions": json.dumps(["Western Europe"]),
@@ -151,7 +151,7 @@ DEFAULT_COMMODITIES = [
     # === PACKAGING ===
     {
         "name": "Paper/Cardboard",
-        "category": CommodityCategory.PACKAGING,
+        "category": "packaging",
         "unit": "ton",
         "origin_countries": json.dumps(["China", "Turkey", "Germany"]),
         "sourcing_regions": json.dumps(["East Asia", "Eastern Europe"]),
@@ -159,7 +159,7 @@ DEFAULT_COMMODITIES = [
     },
     {
         "name": "HDPE (Plastic)",
-        "category": CommodityCategory.PACKAGING,
+        "category": "packaging",
         "unit": "ton",
         "origin_countries": json.dumps(["Saudi Arabia", "China", "USA"]),
         "sourcing_regions": json.dumps(["Middle East", "East Asia", "North America"]),
@@ -167,7 +167,7 @@ DEFAULT_COMMODITIES = [
     },
     {
         "name": "PET Resin",
-        "category": CommodityCategory.PACKAGING,
+        "category": "packaging",
         "unit": "ton",
         "origin_countries": json.dumps(["China", "India", "Saudi Arabia"]),
         "sourcing_regions": json.dumps(["East Asia", "Middle East"]),
@@ -175,7 +175,7 @@ DEFAULT_COMMODITIES = [
     },
     {
         "name": "Polypropylene (PP)",
-        "category": CommodityCategory.PACKAGING,
+        "category": "packaging",
         "unit": "ton",
         "origin_countries": json.dumps(["Saudi Arabia", "China", "South Korea"]),
         "sourcing_regions": json.dumps(["Middle East", "East Asia"]),
@@ -183,7 +183,7 @@ DEFAULT_COMMODITIES = [
     },
     {
         "name": "Aluminum",
-        "category": CommodityCategory.PACKAGING,
+        "category": "packaging",
         "unit": "ton",
         "origin_countries": json.dumps(["China", "Russia", "India", "UAE"]),
         "sourcing_regions": json.dumps(["East Asia", "Middle East"]),
@@ -191,7 +191,7 @@ DEFAULT_COMMODITIES = [
     },
     {
         "name": "Tin Plate",
-        "category": CommodityCategory.PACKAGING,
+        "category": "packaging",
         "unit": "ton",
         "origin_countries": json.dumps(["China", "Indonesia", "Peru"]),
         "sourcing_regions": json.dumps(["East Asia", "South America"]),
@@ -200,7 +200,7 @@ DEFAULT_COMMODITIES = [
     # === CLEANING & HOUSEHOLD ===
     {
         "name": "Paraffin Wax",
-        "category": CommodityCategory.CLEANING,
+        "category": "cleaning",
         "unit": "ton",
         "origin_countries": json.dumps(["China", "Saudi Arabia", "India"]),
         "sourcing_regions": json.dumps(["East Asia", "Middle East"]),
@@ -208,7 +208,7 @@ DEFAULT_COMMODITIES = [
     },
     {
         "name": "Caustic Soda",
-        "category": CommodityCategory.CLEANING,
+        "category": "cleaning",
         "unit": "ton",
         "origin_countries": json.dumps(["China", "Turkey", "Saudi Arabia"]),
         "sourcing_regions": json.dumps(["East Asia", "Middle East"]),
@@ -217,7 +217,7 @@ DEFAULT_COMMODITIES = [
     # === ENERGY (cost drivers) ===
     {
         "name": "Diesel",
-        "category": CommodityCategory.FUEL,
+        "category": "fuel",
         "unit": "barrel",
         "origin_countries": json.dumps(["Saudi Arabia", "Iraq", "Kuwait"]),
         "sourcing_regions": json.dumps(["Middle East"]),
@@ -225,7 +225,7 @@ DEFAULT_COMMODITIES = [
     },
     {
         "name": "Brent Crude Oil",
-        "category": CommodityCategory.FUEL,
+        "category": "fuel",
         "unit": "barrel",
         "origin_countries": json.dumps(["Global"]),
         "sourcing_regions": json.dumps(["Global"]),
@@ -234,7 +234,7 @@ DEFAULT_COMMODITIES = [
     # === SHIPPING (cost drivers) ===
     {
         "name": "Baltic Dry Index",
-        "category": CommodityCategory.SHIPPING,
+        "category": "shipping",
         "unit": "index",
         "origin_countries": json.dumps(["Global"]),
         "sourcing_regions": json.dumps(["Global"]),
@@ -242,7 +242,7 @@ DEFAULT_COMMODITIES = [
     },
     {
         "name": "Container Freight Rate",
-        "category": CommodityCategory.SHIPPING,
+        "category": "shipping",
         "unit": "index",
         "origin_countries": json.dumps(["Global"]),
         "sourcing_regions": json.dumps(["Shanghai to Mediterranean"]),
@@ -251,7 +251,7 @@ DEFAULT_COMMODITIES = [
     # === CURRENCIES (sourcing cost) ===
     {
         "name": "USD/TRY",
-        "category": CommodityCategory.CURRENCY,
+        "category": "currency",
         "unit": "rate",
         "origin_countries": json.dumps(["Turkey"]),
         "sourcing_regions": json.dumps(["Eastern Europe"]),
@@ -259,7 +259,7 @@ DEFAULT_COMMODITIES = [
     },
     {
         "name": "USD/EGP",
-        "category": CommodityCategory.CURRENCY,
+        "category": "currency",
         "unit": "rate",
         "origin_countries": json.dumps(["Egypt"]),
         "sourcing_regions": json.dumps(["Middle East"]),
@@ -267,7 +267,7 @@ DEFAULT_COMMODITIES = [
     },
     {
         "name": "USD/CNY",
-        "category": CommodityCategory.CURRENCY,
+        "category": "currency",
         "unit": "rate",
         "origin_countries": json.dumps(["China"]),
         "sourcing_regions": json.dumps(["East Asia"]),
@@ -275,7 +275,7 @@ DEFAULT_COMMODITIES = [
     },
     {
         "name": "USD/LBP",
-        "category": CommodityCategory.CURRENCY,
+        "category": "currency",
         "unit": "rate",
         "origin_countries": json.dumps(["Lebanon"]),
         "sourcing_regions": json.dumps(["Middle East"]),

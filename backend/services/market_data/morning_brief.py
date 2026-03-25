@@ -9,7 +9,7 @@ from redis.asyncio import Redis
 from sqlalchemy import select, func as sa_func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.models.commodity import Commodity, CommodityCategory, CommodityPrice
+from backend.models.commodity import Commodity, CommodityPrice
 from backend.models.currency import CurrencyRate as CurrencyRateModel
 
 logger = structlog.get_logger()
@@ -64,9 +64,9 @@ class MorningBriefService:
             brief = await self._compute_commodity_brief(commodity, now)
 
             # Route to correct section
-            if commodity.category == CommodityCategory.CURRENCY:
+            if commodity.category == "currency":
                 currencies.append(brief)
-            elif commodity.category == CommodityCategory.SHIPPING:
+            elif commodity.category == "shipping":
                 shipping.append(brief)
             else:
                 commodity_briefs.append(brief)

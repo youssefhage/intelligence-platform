@@ -38,27 +38,27 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print(f"Logging setup warning: {e}")
 
-    # Ensure PostgreSQL enum types have all values before creating/altering tables
-    # ALTER TYPE ... ADD VALUE must run outside a transaction block
+    # Migrate category column from enum to varchar for flexibility
     try:
         from sqlalchemy import text as sa_text
-        from sqlalchemy.ext.asyncio import create_async_engine as _cae
-        raw_engine = _cae(
-            str(engine.url),
-            isolation_level="AUTOCOMMIT",
-        )
-        async with raw_engine.connect() as conn:
-            for val in ["beverage", "packaging", "cleaning", "shipping", "currency", "other"]:
-                try:
-                    await conn.execute(
-                        sa_text(f"ALTER TYPE commoditycategory ADD VALUE IF NOT EXISTS '{val}'")
-                    )
-                except Exception:
-                    pass
-        await raw_engine.dispose()
-        print("Enum types updated")
+        async with engine.begin() as conn:
+            # Check if column is still enum type and convert to varchar
+            result = await conn.execute(sa_text("""
+                SELECT data_type FROM information_schema.columns
+                WHERE table_name = 'commodities' AND column_name = 'category'
+            """))
+            row = result.scalar_one_or_none()
+            if row and row == "USER-DEFINED":
+                await conn.execute(sa_text("""
+                    ALTER TABLE commodities
+                    ALTER COLUMN category TYPE VARCHAR(50)
+                    USING category::TEXT
+                """))
+                print("Migrated category column from enum to varchar")
+            else:
+                print(f"Category column type: {row}")
     except Exception as e:
-        print(f"Enum update note: {e}")
+        print(f"Category migration note: {e}")
 
     # Create tables using SQLAlchemy metadata (works even without alembic migrations)
     try:
