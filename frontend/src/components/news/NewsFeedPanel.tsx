@@ -44,7 +44,7 @@ export default function NewsFeedPanel() {
     setSelectedScenario(id);
     setLoadingScenario(true);
     try {
-      const result = await api.runGeopoliticalScenario(id);
+      const result = await api.runGeopoliticalScenario(id) as GeopoliticalScenarioResult;
       setScenarioResult(result);
     } finally {
       setLoadingScenario(false);
