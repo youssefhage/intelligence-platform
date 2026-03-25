@@ -55,8 +55,12 @@ async def lifespan(app: FastAPI):
                     USING category::TEXT
                 """))
                 print("Migrated category column from enum to varchar")
-            else:
-                print(f"Category column type: {row}")
+
+            # Normalize any uppercase category values to lowercase
+            await conn.execute(sa_text(
+                "UPDATE commodities SET category = LOWER(category) WHERE category != LOWER(category)"
+            ))
+            print("Category values normalized to lowercase")
     except Exception as e:
         print(f"Category migration note: {e}")
 
