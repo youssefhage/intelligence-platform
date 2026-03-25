@@ -102,4 +102,39 @@ export const api = {
     postJSON("/notifications/test", { channels, message }),
   sendDailyDigest: (channels?: string[]) =>
     postJSON("/notifications/daily-digest", channels ? { channels } : undefined),
+
+  // Morning Brief
+  getMorningBrief: () => fetchJSON("/commodities/morning-brief"),
+
+  // Commodity Detail
+  getCommodityDetail: (id: number, range = "1Y") =>
+    fetchJSON(`/commodities/${id}/detail?range=${range}`),
+  getCommodityAISummary: (id: number) =>
+    fetchJSON(`/commodities/${id}/ai-summary`),
+
+  // Landed Cost
+  calculateLandedCost: (data: unknown) =>
+    postJSON("/landed-cost/calculate", data),
+  getLandedCostHistory: (limit = 50) =>
+    fetchJSON(`/landed-cost/history?limit=${limit}`),
+  getDutyRates: () => fetchJSON("/landed-cost/duty-rates"),
+  createDutyRate: (data: unknown) =>
+    postJSON("/landed-cost/duty-rates", data),
+
+  // News
+  getNewsFeed: (limit = 30, commodity?: string) =>
+    fetchJSON(`/news/feed?limit=${limit}${commodity ? `&commodity=${encodeURIComponent(commodity)}` : ""}`),
+  fetchNews: () => postJSON("/news/fetch"),
+  getGeopoliticalScenarios: () => fetchJSON("/news/geopolitical/scenarios"),
+  runGeopoliticalScenario: (id: string) =>
+    fetchJSON(`/news/geopolitical/scenario/${id}`),
+  getSupplyRoutes: () => fetchJSON("/news/geopolitical/supply-routes"),
+
+  // Reports
+  getWeeklyReport: () => fetchJSON("/reports/weekly"),
+
+  // Alert Thresholds
+  getAlertThresholds: () => fetchJSON("/dashboard/alert-thresholds"),
+  createAlertThreshold: (data: unknown) =>
+    postJSON("/dashboard/alert-thresholds", data),
 };

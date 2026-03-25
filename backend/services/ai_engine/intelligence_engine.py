@@ -1,14 +1,14 @@
-"""AI-powered intelligence engine using Claude for market analysis and recommendations."""
+"""AI-powered intelligence engine using Moonshot Kimi for market analysis and recommendations."""
 
 import json
 from datetime import datetime
 
-import anthropic
 import structlog
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.core.config import settings
 from backend.models.insight import InsightCategory, MarketInsight
+from backend.services.ai_engine.ai_client import get_async_client, is_configured
 
 logger = structlog.get_logger()
 
@@ -37,11 +37,11 @@ Provide responses in structured JSON format with clear, actionable recommendatio
 
 
 class IntelligenceEngine:
-    """Uses Claude to analyze market data and generate actionable insights."""
+    """Uses Moonshot Kimi to analyze market data and generate actionable insights."""
 
     def __init__(self, db: AsyncSession):
         self.db = db
-        self.client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
+        self.client = get_async_client()
 
     async def analyze_market_conditions(
         self, commodity_data: list[dict], supply_chain_data: dict
@@ -65,14 +65,16 @@ Provide your analysis as JSON with these fields:
 - "risk_level": Overall risk level (low/medium/high/critical)
 - "confidence_score": Your confidence in this analysis (0.0-1.0)"""
 
-        response = await self.client.messages.create(
-            model="claude-sonnet-4-20250514",
+        response = await self.client.chat.completions.create(
+            model=settings.ai_model,
             max_tokens=2000,
-            system=SYSTEM_PROMPT,
-            messages=[{"role": "user", "content": prompt}],
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": prompt},
+            ],
         )
 
-        analysis = self._parse_response(response.content[0].text)
+        analysis = self._parse_response(response.choices[0].message.content)
 
         insight = MarketInsight(
             category=InsightCategory.RISK,
@@ -83,7 +85,7 @@ Provide your analysis as JSON with these fields:
             affected_commodities=json.dumps(analysis.get("affected_commodities", [])),
             recommended_actions=json.dumps(analysis.get("recommended_actions", [])),
             confidence_score=analysis.get("confidence_score", 0.7),
-            generated_by="claude_ai",
+            generated_by="kimi_ai",
             created_at=datetime.utcnow(),
         )
         self.db.add(insight)
@@ -121,14 +123,16 @@ Provide your analysis as JSON with:
 - "margin_impact_pct": Expected margin change
 - "confidence_score": 0.0-1.0"""
 
-        response = await self.client.messages.create(
-            model="claude-sonnet-4-20250514",
+        response = await self.client.chat.completions.create(
+            model=settings.ai_model,
             max_tokens=1500,
-            system=SYSTEM_PROMPT,
-            messages=[{"role": "user", "content": prompt}],
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": prompt},
+            ],
         )
 
-        analysis = self._parse_response(response.content[0].text)
+        analysis = self._parse_response(response.choices[0].message.content)
 
         insight = MarketInsight(
             category=InsightCategory.PRICING,
@@ -141,7 +145,7 @@ Provide your analysis as JSON with:
             affected_products=json.dumps([product_data.get("name", "")]),
             recommended_actions=json.dumps(analysis.get("recommended_actions", [])),
             confidence_score=analysis.get("confidence_score", 0.7),
-            generated_by="claude_ai",
+            generated_by="kimi_ai",
             created_at=datetime.utcnow(),
         )
         self.db.add(insight)
@@ -179,14 +183,16 @@ Provide your analysis as JSON with:
 - "estimated_savings_pct": Potential savings from optimal sourcing
 - "confidence_score": 0.0-1.0"""
 
-        response = await self.client.messages.create(
-            model="claude-sonnet-4-20250514",
+        response = await self.client.chat.completions.create(
+            model=settings.ai_model,
             max_tokens=1500,
-            system=SYSTEM_PROMPT,
-            messages=[{"role": "user", "content": prompt}],
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": prompt},
+            ],
         )
 
-        analysis = self._parse_response(response.content[0].text)
+        analysis = self._parse_response(response.choices[0].message.content)
 
         insight = MarketInsight(
             category=InsightCategory.SOURCING,
@@ -199,7 +205,7 @@ Provide your analysis as JSON with:
             affected_commodities=json.dumps([commodity_name]),
             recommended_actions=json.dumps(analysis.get("recommended_actions", [])),
             confidence_score=analysis.get("confidence_score", 0.7),
-            generated_by="claude_ai",
+            generated_by="kimi_ai",
             created_at=datetime.utcnow(),
         )
         self.db.add(insight)
@@ -247,14 +253,16 @@ Provide a comprehensive daily briefing as JSON with:
 - "recommended_actions": Prioritized list of actions for today
 - "confidence_score": 0.0-1.0"""
 
-        response = await self.client.messages.create(
-            model="claude-sonnet-4-20250514",
+        response = await self.client.chat.completions.create(
+            model=settings.ai_model,
             max_tokens=3000,
-            system=SYSTEM_PROMPT,
-            messages=[{"role": "user", "content": prompt}],
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": prompt},
+            ],
         )
 
-        analysis = self._parse_response(response.content[0].text)
+        analysis = self._parse_response(response.choices[0].message.content)
 
         insight = MarketInsight(
             category=InsightCategory.RISK,
@@ -275,7 +283,7 @@ Provide a comprehensive daily briefing as JSON with:
             ),
             recommended_actions=json.dumps(analysis.get("recommended_actions", [])),
             confidence_score=analysis.get("confidence_score", 0.7),
-            generated_by="claude_ai",
+            generated_by="kimi_ai",
             created_at=datetime.utcnow(),
         )
         self.db.add(insight)

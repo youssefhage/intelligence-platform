@@ -15,6 +15,7 @@ logger = structlog.get_logger()
 
 # Default commodities relevant to Lebanese FMCG wholesale
 DEFAULT_COMMODITIES = [
+    # === GRAINS & STAPLES ===
     {
         "name": "Rice (Long Grain)",
         "category": CommodityCategory.GRAIN,
@@ -31,6 +32,23 @@ DEFAULT_COMMODITIES = [
         "sourcing_regions": json.dumps(["Black Sea", "Eastern Europe"]),
         "global_benchmark_symbol": "WHEAT_CBOT",
     },
+    {
+        "name": "Maize",
+        "category": CommodityCategory.GRAIN,
+        "unit": "ton",
+        "origin_countries": json.dumps(["USA", "Argentina", "Brazil", "Ukraine"]),
+        "sourcing_regions": json.dumps(["North America", "South America", "Black Sea"]),
+        "global_benchmark_symbol": "MAIZE",
+    },
+    {
+        "name": "Flour",
+        "category": CommodityCategory.GRAIN,
+        "unit": "ton",
+        "origin_countries": json.dumps(["Turkey", "Egypt", "Ukraine"]),
+        "sourcing_regions": json.dumps(["Eastern Europe", "Middle East"]),
+        "global_benchmark_symbol": "FLOUR",
+    },
+    # === COOKING & FOOD OILS ===
     {
         "name": "Sunflower Oil",
         "category": CommodityCategory.OIL,
@@ -56,6 +74,15 @@ DEFAULT_COMMODITIES = [
         "global_benchmark_symbol": "PALM_OIL",
     },
     {
+        "name": "Olive Oil",
+        "category": CommodityCategory.OIL,
+        "unit": "ton",
+        "origin_countries": json.dumps(["Spain", "Italy", "Tunisia", "Turkey"]),
+        "sourcing_regions": json.dumps(["Mediterranean"]),
+        "global_benchmark_symbol": "OLIVE_OIL",
+    },
+    # === SUGAR ===
+    {
         "name": "Sugar (Raw)",
         "category": CommodityCategory.SUGAR,
         "unit": "ton",
@@ -63,6 +90,131 @@ DEFAULT_COMMODITIES = [
         "sourcing_regions": json.dumps(["South America", "South Asia"]),
         "global_benchmark_symbol": "SUGAR_RAW",
     },
+    # === BEVERAGES ===
+    {
+        "name": "Coffee (Arabica)",
+        "category": CommodityCategory.BEVERAGE,
+        "unit": "ton",
+        "origin_countries": json.dumps(["Brazil", "Colombia", "Ethiopia"]),
+        "sourcing_regions": json.dumps(["South America", "East Africa"]),
+        "global_benchmark_symbol": "COFFEE_ARABICA",
+    },
+    {
+        "name": "Coffee (Robusta)",
+        "category": CommodityCategory.BEVERAGE,
+        "unit": "ton",
+        "origin_countries": json.dumps(["Vietnam", "Brazil", "Indonesia"]),
+        "sourcing_regions": json.dumps(["Southeast Asia", "South America"]),
+        "global_benchmark_symbol": "COFFEE_ROBUSTA",
+    },
+    {
+        "name": "Tea",
+        "category": CommodityCategory.BEVERAGE,
+        "unit": "ton",
+        "origin_countries": json.dumps(["Sri Lanka", "India", "Kenya", "China"]),
+        "sourcing_regions": json.dumps(["South Asia", "East Africa", "East Asia"]),
+        "global_benchmark_symbol": "TEA",
+    },
+    {
+        "name": "Cocoa",
+        "category": CommodityCategory.BEVERAGE,
+        "unit": "ton",
+        "origin_countries": json.dumps(["Ivory Coast", "Ghana", "Ecuador"]),
+        "sourcing_regions": json.dumps(["West Africa", "South America"]),
+        "global_benchmark_symbol": "COCOA",
+    },
+    # === DAIRY ===
+    {
+        "name": "Powdered Milk",
+        "category": CommodityCategory.DAIRY,
+        "unit": "ton",
+        "origin_countries": json.dumps(["New Zealand", "Netherlands", "France"]),
+        "sourcing_regions": json.dumps(["Oceania", "Western Europe"]),
+        "global_benchmark_symbol": "WMP",
+    },
+    {
+        "name": "Butter",
+        "category": CommodityCategory.DAIRY,
+        "unit": "ton",
+        "origin_countries": json.dumps(["New Zealand", "Netherlands", "Ireland"]),
+        "sourcing_regions": json.dumps(["Oceania", "Western Europe"]),
+        "global_benchmark_symbol": "BUTTER",
+    },
+    {
+        "name": "Cheese",
+        "category": CommodityCategory.DAIRY,
+        "unit": "ton",
+        "origin_countries": json.dumps(["Netherlands", "France", "Germany"]),
+        "sourcing_regions": json.dumps(["Western Europe"]),
+        "global_benchmark_symbol": "CHEESE",
+    },
+    # === PACKAGING ===
+    {
+        "name": "Paper/Cardboard",
+        "category": CommodityCategory.PACKAGING,
+        "unit": "ton",
+        "origin_countries": json.dumps(["China", "Turkey", "Germany"]),
+        "sourcing_regions": json.dumps(["East Asia", "Eastern Europe"]),
+        "global_benchmark_symbol": "PAPER_CARDBOARD",
+    },
+    {
+        "name": "HDPE (Plastic)",
+        "category": CommodityCategory.PACKAGING,
+        "unit": "ton",
+        "origin_countries": json.dumps(["Saudi Arabia", "China", "USA"]),
+        "sourcing_regions": json.dumps(["Middle East", "East Asia", "North America"]),
+        "global_benchmark_symbol": "HDPE",
+    },
+    {
+        "name": "PET Resin",
+        "category": CommodityCategory.PACKAGING,
+        "unit": "ton",
+        "origin_countries": json.dumps(["China", "India", "Saudi Arabia"]),
+        "sourcing_regions": json.dumps(["East Asia", "Middle East"]),
+        "global_benchmark_symbol": "PET",
+    },
+    {
+        "name": "Polypropylene (PP)",
+        "category": CommodityCategory.PACKAGING,
+        "unit": "ton",
+        "origin_countries": json.dumps(["Saudi Arabia", "China", "South Korea"]),
+        "sourcing_regions": json.dumps(["Middle East", "East Asia"]),
+        "global_benchmark_symbol": "PP",
+    },
+    {
+        "name": "Aluminum",
+        "category": CommodityCategory.PACKAGING,
+        "unit": "ton",
+        "origin_countries": json.dumps(["China", "Russia", "India", "UAE"]),
+        "sourcing_regions": json.dumps(["East Asia", "Middle East"]),
+        "global_benchmark_symbol": "ALUMINUM",
+    },
+    {
+        "name": "Tin Plate",
+        "category": CommodityCategory.PACKAGING,
+        "unit": "ton",
+        "origin_countries": json.dumps(["China", "Indonesia", "Peru"]),
+        "sourcing_regions": json.dumps(["East Asia", "South America"]),
+        "global_benchmark_symbol": "TIN",
+    },
+    # === CLEANING & HOUSEHOLD ===
+    {
+        "name": "Paraffin Wax",
+        "category": CommodityCategory.CLEANING,
+        "unit": "ton",
+        "origin_countries": json.dumps(["China", "Saudi Arabia", "India"]),
+        "sourcing_regions": json.dumps(["East Asia", "Middle East"]),
+        "global_benchmark_symbol": "PARAFFIN_WAX",
+    },
+    {
+        "name": "Caustic Soda",
+        "category": CommodityCategory.CLEANING,
+        "unit": "ton",
+        "origin_countries": json.dumps(["China", "Turkey", "Saudi Arabia"]),
+        "sourcing_regions": json.dumps(["East Asia", "Middle East"]),
+        "global_benchmark_symbol": "CAUSTIC_SODA",
+    },
+    # === ENERGY (cost drivers) ===
     {
         "name": "Diesel",
         "category": CommodityCategory.FUEL,
@@ -79,13 +231,55 @@ DEFAULT_COMMODITIES = [
         "sourcing_regions": json.dumps(["Global"]),
         "global_benchmark_symbol": "BRENT",
     },
+    # === SHIPPING (cost drivers) ===
     {
-        "name": "Powdered Milk",
-        "category": CommodityCategory.DAIRY,
-        "unit": "ton",
-        "origin_countries": json.dumps(["New Zealand", "Netherlands", "France"]),
-        "sourcing_regions": json.dumps(["Oceania", "Western Europe"]),
-        "global_benchmark_symbol": "WMP",
+        "name": "Baltic Dry Index",
+        "category": CommodityCategory.SHIPPING,
+        "unit": "index",
+        "origin_countries": json.dumps(["Global"]),
+        "sourcing_regions": json.dumps(["Global"]),
+        "global_benchmark_symbol": "BDI",
+    },
+    {
+        "name": "Container Freight Rate",
+        "category": CommodityCategory.SHIPPING,
+        "unit": "index",
+        "origin_countries": json.dumps(["Global"]),
+        "sourcing_regions": json.dumps(["Shanghai to Mediterranean"]),
+        "global_benchmark_symbol": "CONTAINER_FREIGHT",
+    },
+    # === CURRENCIES (sourcing cost) ===
+    {
+        "name": "USD/TRY",
+        "category": CommodityCategory.CURRENCY,
+        "unit": "rate",
+        "origin_countries": json.dumps(["Turkey"]),
+        "sourcing_regions": json.dumps(["Eastern Europe"]),
+        "global_benchmark_symbol": "USD_TRY",
+    },
+    {
+        "name": "USD/EGP",
+        "category": CommodityCategory.CURRENCY,
+        "unit": "rate",
+        "origin_countries": json.dumps(["Egypt"]),
+        "sourcing_regions": json.dumps(["Middle East"]),
+        "global_benchmark_symbol": "USD_EGP",
+    },
+    {
+        "name": "USD/CNY",
+        "category": CommodityCategory.CURRENCY,
+        "unit": "rate",
+        "origin_countries": json.dumps(["China"]),
+        "sourcing_regions": json.dumps(["East Asia"]),
+        "global_benchmark_symbol": "USD_CNY",
+    },
+    {
+        "name": "USD/LBP",
+        "category": CommodityCategory.CURRENCY,
+        "unit": "rate",
+        "origin_countries": json.dumps(["Lebanon"]),
+        "sourcing_regions": json.dumps(["Middle East"]),
+        "global_benchmark_symbol": "USD_LBP",
     },
 ]
 
@@ -113,6 +307,32 @@ class CommodityTracker:
         await self.db.commit()
         logger.info("Initialized default commodities", count=len(commodities))
         return commodities
+
+    async def ensure_all_commodities(self) -> list[Commodity]:
+        """Insert any missing commodities from DEFAULT_COMMODITIES.
+
+        Unlike initialize_commodities which only seeds when empty, this method
+        checks for missing entries by global_benchmark_symbol and inserts them.
+        Safe to call on every startup.
+        """
+        result = await self.db.execute(select(Commodity))
+        existing = result.scalars().all()
+        existing_symbols = {c.global_benchmark_symbol for c in existing}
+
+        added = []
+        for data in DEFAULT_COMMODITIES:
+            if data["global_benchmark_symbol"] not in existing_symbols:
+                commodity = Commodity(**data)
+                self.db.add(commodity)
+                added.append(commodity)
+
+        if added:
+            await self.db.commit()
+            logger.info("Added missing commodities", count=len(added))
+
+        # Return all commodities
+        result = await self.db.execute(select(Commodity))
+        return list(result.scalars().all())
 
     async def fetch_world_bank_prices(self) -> list[dict]:
         """Fetch commodity price data from World Bank API."""

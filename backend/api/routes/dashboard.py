@@ -4,9 +4,10 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.api.schemas import AlertResponse, DashboardSummary
+from backend.api.schemas import AlertResponse, AlertThresholdCreate, AlertThresholdResponse, DashboardSummary
 from backend.core.database import get_db
 from backend.models.alert import Alert
+from backend.models.alert_config import AlertThreshold
 from backend.models.commodity import Commodity
 from backend.models.product import Product
 from backend.models.supplier import Supplier
@@ -90,5 +91,56 @@ async def resolve_alert(alert_id: int, db: AsyncSession = Depends(get_db)):
     if not alert:
         return {"error": "Alert not found"}
     alert.is_resolved = True
+    await db.commit()
+    return {"status": "ok"}
+
+
+# --- Alert Thresholds ---
+@router.get("/alert-thresholds", response_model=list[AlertThresholdResponse])
+async def list_alert_thresholds(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(AlertThreshold))
+    return result.scalars().all()
+
+
+@router.post("/alert-thresholds", response_model=AlertThresholdResponse)
+async def create_alert_threshold(
+    data: AlertThresholdCreate, db: AsyncSession = Depends(get_db)
+):
+    threshold = AlertThreshold(**data.model_dump())
+    db.add(threshold)
+    await db.commit()
+    await db.refresh(threshold)
+    return threshold
+
+
+@router.put("/alert-thresholds/{threshold_id}")
+async def update_alert_threshold(
+    threshold_id: int,
+    data: AlertThresholdCreate,
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(
+        select(AlertThreshold).where(AlertThreshold.id == threshold_id)
+    )
+    threshold = result.scalar_one_or_none()
+    if not threshold:
+        return {"error": "Threshold not found"}
+    for key, value in data.model_dump().items():
+        setattr(threshold, key, value)
+    await db.commit()
+    return {"status": "ok"}
+
+
+@router.delete("/alert-thresholds/{threshold_id}")
+async def delete_alert_threshold(
+    threshold_id: int, db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(
+        select(AlertThreshold).where(AlertThreshold.id == threshold_id)
+    )
+    threshold = result.scalar_one_or_none()
+    if not threshold:
+        return {"error": "Threshold not found"}
+    await db.delete(threshold)
     await db.commit()
     return {"status": "ok"}

@@ -10,7 +10,10 @@ from backend.api.routes import (
     commodities,
     dashboard,
     intelligence,
+    landed_cost,
+    news,
     notifications,
+    reports,
     suppliers,
     sync,
     webhooks,
@@ -20,8 +23,9 @@ from backend.core.database import Base, engine, async_session
 from backend.core.logging import setup_logging
 from backend.models import (  # noqa: F401 - ensure all models registered with Base
     Commodity, CommodityPrice, Product, ProductPriceHistory,
-    Supplier, SupplierRiskAssessment, Alert, InventorySnapshot,
-    SalesRecord, MarketInsight,
+    Supplier, SupplierRiskAssessment, Alert, AlertThreshold,
+    InventorySnapshot, SalesRecord, MarketInsight,
+    CurrencyRate, NewsArticle, LandedCostCalculation, DutyRate,
 )
 
 
@@ -57,7 +61,7 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print(f"Alembic skipped: {e}")
 
-    # Seed data if empty
+    # Seed data if empty, then ensure all commodities exist
     try:
         from sqlalchemy import text
         async with async_session() as db:
@@ -69,7 +73,11 @@ async def lifespan(app: FastAPI):
                 await seed_suppliers(db)
                 print("Database seeded successfully")
             else:
-                print(f"Database has {count} commodities, skipping seed")
+                # Ensure any new commodities from DEFAULT_COMMODITIES are added
+                from backend.services.market_data.commodity_tracker import CommodityTracker
+                tracker = CommodityTracker(db)
+                all_commodities = await tracker.ensure_all_commodities()
+                print(f"Database has {len(all_commodities)} commodities (ensured all defaults)")
     except Exception as e:
         print(f"Seed skipped: {e}")
         traceback.print_exc()
@@ -104,6 +112,9 @@ app.include_router(sync.router, prefix="/api")
 app.include_router(analytics.router, prefix="/api")
 app.include_router(webhooks.router, prefix="/api")
 app.include_router(notifications.router, prefix="/api")
+app.include_router(landed_cost.router, prefix="/api")
+app.include_router(news.router, prefix="/api")
+app.include_router(reports.router, prefix="/api")
 
 
 @app.get("/api/health")

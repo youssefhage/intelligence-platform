@@ -16,14 +16,25 @@ logger = structlog.get_logger()
 
 # World Bank commodity indicator codes
 WORLD_BANK_INDICATORS = {
-    "RICE": "RICE_05",       # Rice, 5% broken
-    "WHEAT_CBOT": "WHEAT_US_HRW",  # Wheat, US Hard Red Winter
+    "RICE": "RICE_05",
+    "WHEAT_CBOT": "WHEAT_US_HRW",
     "SUNFLOWER_OIL": "SUNFLOWER_OIL",
     "SOYBEAN_OIL": "SOYBEAN_OIL",
     "PALM_OIL": "PALM_OIL",
-    "SUGAR_RAW": "SUGAR_WLD",  # Sugar, world price
+    "SUGAR_RAW": "SUGAR_WLD",
     "BRENT": "CRUDE_BRENT",
-    "WMP": "WMP",  # Whole Milk Powder
+    "WMP": "WMP",
+    # New commodities
+    "MAIZE": "MAIZE",
+    "COCOA": "COCOA",
+    "COFFEE_ARABICA": "COFFEE_ARABIC",
+    "COFFEE_ROBUSTA": "COFFEE_ROBUS",
+    "TEA": "TEA_AVG",
+    "OLIVE_OIL": "OLIVE_OIL",
+    "BUTTER": "BUTTER",
+    "CHEESE": "CHEESE",
+    "ALUMINUM": "ALUMINUM",
+    "TIN": "TIN",
 }
 
 # USDA FAS API commodity codes (for production/trade data)
@@ -167,14 +178,20 @@ class EnhancedCommodityTracker:
 
     async def fetch_all_prices(self) -> dict:
         """Fetch prices from all available sources and record them."""
-        results = {"world_bank": [], "usda": [], "errors": []}
+        from backend.services.market_data.imf_connector import IMFConnector
+        from backend.services.market_data.fred_connector import FREDConnector
+        from backend.services.market_data.forex_connector import ForexConnector
 
-        # Fetch World Bank prices for each tracked commodity
+        results = {"world_bank": [], "imf": [], "fred": [], "forex": [], "usda": [], "errors": []}
+
+        # Get all tracked commodities
         commodities_result = await self.db.execute(
             select(Commodity).where(Commodity.is_active.is_(True))
         )
         commodities = {c.global_benchmark_symbol: c for c in commodities_result.scalars().all()}
+        all_symbols = list(commodities.keys())
 
+        # --- World Bank prices ---
         for symbol, wb_indicator in WORLD_BANK_INDICATORS.items():
             commodity = commodities.get(symbol)
             if not commodity:
@@ -197,9 +214,97 @@ class EnhancedCommodityTracker:
                             {"commodity": commodity.name, "price": price_data["value"]}
                         )
                     except Exception as e:
-                        results["errors"].append(f"{commodity.name}: {e}")
+                        results["errors"].append(f"{commodity.name} (WB): {e}")
 
-        # Fetch USDA data for applicable commodities
+        # --- IMF prices ---
+        try:
+            imf = IMFConnector()
+            imf_data = await imf.fetch_all_tracked(all_symbols)
+            for symbol, prices in imf_data.items():
+                commodity = commodities.get(symbol)
+                if not commodity or not prices:
+                    continue
+                # Only record the latest price from IMF (avoid duplicates with WB)
+                latest = prices[0] if prices else None
+                if latest and latest.get("value"):
+                    try:
+                        record = CommodityPrice(
+                            commodity_id=commodity.id,
+                            price_usd=float(latest["value"]),
+                            price_lbp=float(latest["value"]) * settings.lbp_exchange_rate,
+                            source="imf",
+                            recorded_at=self._parse_period_date(latest["date"]),
+                        )
+                        self.db.add(record)
+                        results["imf"].append(
+                            {"commodity": commodity.name, "price": latest["value"]}
+                        )
+                    except Exception as e:
+                        results["errors"].append(f"{commodity.name} (IMF): {e}")
+            await imf.close()
+        except Exception as e:
+            results["errors"].append(f"IMF connector: {e}")
+
+        # --- FRED prices ---
+        try:
+            fred = FREDConnector()
+            if fred.is_configured:
+                fred_data = await fred.fetch_all_tracked(all_symbols)
+                for symbol, prices in fred_data.items():
+                    commodity = commodities.get(symbol)
+                    if not commodity or not prices:
+                        continue
+                    latest = prices[0] if prices else None
+                    if latest and latest.get("value"):
+                        try:
+                            record = CommodityPrice(
+                                commodity_id=commodity.id,
+                                price_usd=float(latest["value"]),
+                                price_lbp=float(latest["value"]) * settings.lbp_exchange_rate,
+                                source="fred",
+                                recorded_at=datetime.strptime(latest["date"], "%Y-%m-%d"),
+                            )
+                            self.db.add(record)
+                            results["fred"].append(
+                                {"commodity": commodity.name, "price": latest["value"]}
+                            )
+                        except Exception as e:
+                            results["errors"].append(f"{commodity.name} (FRED): {e}")
+                await fred.close()
+        except Exception as e:
+            results["errors"].append(f"FRED connector: {e}")
+
+        # --- Forex rates as commodity prices ---
+        try:
+            forex = ForexConnector(self.db)
+            rates = await forex.fetch_and_persist()
+            from backend.services.market_data.forex_connector import FOREX_SYMBOL_MAP
+            for symbol, currency_code in FOREX_SYMBOL_MAP.items():
+                commodity = commodities.get(symbol)
+                if not commodity:
+                    continue
+                pair_name = f"USD/{currency_code}"
+                rate = rates.get(pair_name)
+                if rate:
+                    try:
+                        record = CommodityPrice(
+                            commodity_id=commodity.id,
+                            price_usd=rate,
+                            price_lbp=0,  # Not applicable for currency pairs
+                            source="forex",
+                            recorded_at=datetime.utcnow(),
+                        )
+                        self.db.add(record)
+                        results["forex"].append(
+                            {"commodity": commodity.name, "rate": rate}
+                        )
+                    except Exception as e:
+                        results["errors"].append(f"{commodity.name} (forex): {e}")
+            await forex.close()
+        except Exception as e:
+            results["errors"].append(f"Forex connector: {e}")
+
+        # --- USDA data ---
         for symbol, usda_code in USDA_COMMODITY_CODES.items():
             commodity = commodities.get(symbol)
             if not commodity:
@@ -215,6 +320,9 @@ class EnhancedCommodityTracker:
         logger.info(
             "Multi-source price fetch complete",
             wb_prices=len(results["world_bank"]),
+            imf_prices=len(results["imf"]),
+            fred_prices=len(results["fred"]),
+            forex_rates=len(results["forex"]),
             usda_records=len(results["usda"]),
             errors=len(results["errors"]),
         )
@@ -283,6 +391,22 @@ class EnhancedCommodityTracker:
                 year, month = date_str.split("M")
                 return datetime(int(year), int(month), 1)
             return datetime(int(date_str), 1, 1)
+        except (ValueError, TypeError):
+            return datetime.utcnow()
+
+    def _parse_period_date(self, date_str: str) -> datetime:
+        """Parse period date formats like '2024-01', '2024-M01', or '2024-01-15'."""
+        try:
+            if "-M" in date_str:
+                # IMF format: 2024-M01
+                parts = date_str.split("-M")
+                return datetime(int(parts[0]), int(parts[1]), 1)
+            elif len(date_str) == 7:
+                # YYYY-MM format
+                return datetime.strptime(date_str, "%Y-%m")
+            elif len(date_str) == 10:
+                return datetime.strptime(date_str, "%Y-%m-%d")
+            return datetime.utcnow()
         except (ValueError, TypeError):
             return datetime.utcnow()
 

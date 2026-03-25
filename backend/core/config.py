@@ -9,10 +9,17 @@ class Settings(BaseSettings):
     # Redis
     redis_url: str = "redis://localhost:6379/0"
 
-    # API Keys
+    # AI (Moonshot Kimi)
+    ai_api_key: str = ""
+    ai_base_url: str = "https://api.moonshot.ai/v1"
+    ai_model: str = "moonshot-v1-auto"
+
+    # Legacy (kept for backwards compat)
     anthropic_api_key: str = ""
     world_bank_api_url: str = "https://api.worldbank.org/v2"
     fao_api_url: str = "https://www.fao.org/faostat/api/v1"
+    imf_api_url: str = "https://dataservices.imf.org/REST/SDMX_JSON.svc"
+    fred_api_key: str = ""
 
     # ERP Integration
     erp_base_url: str = "http://localhost:8080/api"

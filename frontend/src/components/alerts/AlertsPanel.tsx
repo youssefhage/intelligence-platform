@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { api } from "../../services/api";
 import { useApi } from "../../hooks/useApi";
 import type { Alert } from "../../types";
@@ -6,7 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { CheckCircle2, Eye } from "lucide-react";
+import { CheckCircle2, Eye, Settings, Bell } from "lucide-react";
+import AlertSettings from "./AlertSettings";
 
 const severityVariant = (severity: string) => {
   switch (severity) {
@@ -24,9 +26,15 @@ const typeLabels: Record<string, string> = {
   currency_shift: "Currency Shift",
   geopolitical: "Geopolitical",
   sourcing_opportunity: "Sourcing Opportunity",
+  buy_window: "Buy Window",
+  shipping_rate_change: "Shipping Rate",
+  sourcing_currency_move: "Currency Move",
 };
 
+type View = "alerts" | "settings";
+
 export default function AlertsPanel() {
+  const [view, setView] = useState<View>("alerts");
   const alerts = useApi<Alert[]>(() => api.getAlerts(50) as Promise<Alert[]>);
 
   const handleMarkRead = async (id: number) => {
@@ -39,84 +47,106 @@ export default function AlertsPanel() {
     alerts.reload();
   };
 
-  if (alerts.loading) {
-    return (
-      <div className="space-y-3">
-        {[1, 2, 3, 4].map((i) => (
-          <Skeleton key={i} className="h-32 rounded-xl" />
-        ))}
-      </div>
-    );
-  }
-
-  if (alerts.data?.length === 0) {
-    return (
-      <Card>
-        <CardContent className="flex h-48 items-center justify-center">
-          <p className="text-sm text-muted-foreground">No active alerts. All clear.</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
-    <div className="space-y-3">
-      {alerts.data?.map((alert) => (
-        <Card
-          key={alert.id}
-          className={cn(
-            "border-l-4 transition-opacity",
-            alert.severity === "critical"
-              ? "border-l-destructive"
-              : alert.severity === "warning"
-                ? "border-l-warning"
-                : "border-l-primary",
-            alert.is_read && "opacity-60"
-          )}
+    <div className="space-y-4">
+      {/* View Toggle */}
+      <div className="flex gap-2">
+        <Button
+          variant={view === "alerts" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setView("alerts")}
         >
-          <CardContent className="pt-6">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1 space-y-2">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant={severityVariant(alert.severity)} className="uppercase">
-                    {alert.severity}
-                  </Badge>
-                  <Badge variant="secondary">
-                    {typeLabels[alert.alert_type] || alert.alert_type}
-                  </Badge>
-                  <span className="text-xs text-muted-foreground">
-                    {new Date(alert.created_at).toLocaleString()}
-                  </span>
-                </div>
+          <Bell className="h-3.5 w-3.5 mr-1.5" />
+          Alerts
+        </Button>
+        <Button
+          variant={view === "settings" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setView("settings")}
+        >
+          <Settings className="h-3.5 w-3.5 mr-1.5" />
+          Alert Settings
+        </Button>
+      </div>
 
-                <h4 className="text-[15px] font-semibold text-foreground">
-                  {alert.title}
-                </h4>
-                <p className="text-sm leading-relaxed text-muted-foreground">
-                  {alert.message}
-                </p>
-
-                {alert.action_recommended && (
-                  <div className="rounded-lg border-l-[3px] border-l-primary bg-muted/50 px-4 py-2.5 text-sm text-primary">
-                    Recommended: {alert.action_recommended}
-                  </div>
-                )}
-              </div>
+      {view === "settings" ? (
+        <AlertSettings />
+      ) : (
+        <>
+          {alerts.loading ? (
+            <div className="space-y-3">
+              {[1, 2, 3, 4].map((i) => (
+                <Skeleton key={i} className="h-32 rounded-xl" />
+              ))}
             </div>
+          ) : alerts.data?.length === 0 ? (
+            <Card>
+              <CardContent className="flex h-48 items-center justify-center">
+                <p className="text-sm text-muted-foreground">No active alerts. All clear.</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {alerts.data?.map((alert) => (
+                <Card
+                  key={alert.id}
+                  className={cn(
+                    "border-l-4 transition-opacity",
+                    alert.severity === "critical"
+                      ? "border-l-destructive"
+                      : alert.severity === "warning"
+                        ? "border-l-warning"
+                        : "border-l-primary",
+                    alert.is_read && "opacity-60"
+                  )}
+                >
+                  <CardContent className="pt-6">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 space-y-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge variant={severityVariant(alert.severity)} className="uppercase">
+                            {alert.severity}
+                          </Badge>
+                          <Badge variant="secondary">
+                            {typeLabels[alert.alert_type] || alert.alert_type}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(alert.created_at).toLocaleString()}
+                          </span>
+                        </div>
 
-            <div className="mt-4 flex gap-2">
-              {!alert.is_read && (
-                <Button variant="outline" size="sm" onClick={() => handleMarkRead(alert.id)}>
-                  <Eye className="h-3.5 w-3.5" /> Mark Read
-                </Button>
-              )}
-              <Button variant="success" size="sm" onClick={() => handleResolve(alert.id)}>
-                <CheckCircle2 className="h-3.5 w-3.5" /> Resolve
-              </Button>
+                        <h4 className="text-[15px] font-semibold text-foreground">
+                          {alert.title}
+                        </h4>
+                        <p className="text-sm leading-relaxed text-muted-foreground">
+                          {alert.message}
+                        </p>
+
+                        {alert.action_recommended && (
+                          <div className="rounded-lg border-l-[3px] border-l-primary bg-muted/50 px-4 py-2.5 text-sm text-primary">
+                            Recommended: {alert.action_recommended}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="mt-4 flex gap-2">
+                      {!alert.is_read && (
+                        <Button variant="outline" size="sm" onClick={() => handleMarkRead(alert.id)}>
+                          <Eye className="h-3.5 w-3.5 mr-1" /> Mark Read
+                        </Button>
+                      )}
+                      <Button variant="outline" size="sm" onClick={() => handleResolve(alert.id)}>
+                        <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Resolve
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
-          </CardContent>
-        </Card>
-      ))}
+          )}
+        </>
+      )}
     </div>
   );
 }

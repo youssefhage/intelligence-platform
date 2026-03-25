@@ -1,6 +1,7 @@
 """API routes for commodity tracking and price management."""
 
 from fastapi import APIRouter, Depends
+from redis.asyncio import Redis
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -9,7 +10,7 @@ from backend.api.schemas import (
     CommodityPriceRecord,
     CommodityResponse,
 )
-from backend.core.database import get_db
+from backend.core.database import get_db, get_redis
 from backend.models.commodity import Commodity
 from backend.services.market_data.commodity_tracker import CommodityTracker
 from backend.services.market_data.price_forecaster import PriceForecaster
@@ -34,6 +35,48 @@ async def create_commodity(
     await db.commit()
     await db.refresh(commodity)
     return commodity
+
+
+@router.get("/morning-brief")
+async def get_morning_brief(db: AsyncSession = Depends(get_db)):
+    """Get the morning intelligence brief with signals, trends, and sparklines."""
+    from backend.services.market_data.morning_brief import MorningBriefService
+
+    try:
+        redis = await get_redis()
+    except Exception:
+        redis = None
+    service = MorningBriefService(db, redis)
+    return await service.generate()
+
+
+@router.get("/{commodity_id}/detail")
+async def get_commodity_detail(
+    commodity_id: int,
+    range: str = "1Y",
+    db: AsyncSession = Depends(get_db),
+):
+    """Get extended commodity detail with MA overlays, volatility, correlations."""
+    from backend.services.market_data.commodity_analytics import CommodityAnalytics
+
+    analytics = CommodityAnalytics(db)
+    return await analytics.compute_detail(commodity_id, range)
+
+
+@router.get("/{commodity_id}/ai-summary")
+async def get_commodity_ai_summary(
+    commodity_id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    """Get AI-generated market summary for a commodity."""
+    from backend.services.market_data.commodity_analytics import CommodityAnalytics
+
+    try:
+        redis = await get_redis()
+    except Exception:
+        redis = None
+    analytics = CommodityAnalytics(db, redis)
+    return await analytics.generate_ai_summary(commodity_id)
 
 
 @router.get("/prices/latest")

@@ -3,7 +3,6 @@
 import json
 from datetime import datetime
 
-import anthropic
 import structlog
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,6 +12,7 @@ from backend.models.commodity import Commodity, CommodityPrice
 from backend.models.insight import InsightCategory, MarketInsight
 from backend.models.inventory import SalesRecord
 from backend.models.product import Product
+from backend.services.ai_engine.ai_client import get_async_client, is_configured
 
 logger = structlog.get_logger()
 
@@ -38,7 +38,7 @@ class ScenarioEngine:
 
     def __init__(self, db: AsyncSession):
         self.db = db
-        self.client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
+        self.client = get_async_client()
 
     async def run_scenario(
         self,
@@ -65,7 +65,7 @@ class ScenarioEngine:
         result["modeled_at"] = datetime.utcnow().isoformat()
 
         # Get AI commentary on the scenario
-        if settings.anthropic_api_key:
+        if is_configured():
             result["ai_analysis"] = await self._get_ai_commentary(
                 scenario_type, parameters, result
             )
@@ -493,15 +493,18 @@ class ScenarioEngine:
                     :5
                 ]
 
-            response = await self.client.messages.create(
-                model="claude-sonnet-4-20250514",
+            response = await self.client.chat.completions.create(
+                model=settings.ai_model,
                 max_tokens=800,
-                system=(
-                    "You are a strategic advisor for a Lebanese FMCG wholesale business. "
-                    "Provide concise, actionable commentary on the scenario analysis results. "
-                    "Focus on immediate actions and strategic implications."
-                ),
                 messages=[
+                    {
+                        "role": "system",
+                        "content": (
+                            "You are a strategic advisor for a Lebanese FMCG wholesale business. "
+                            "Provide concise, actionable commentary on the scenario analysis results. "
+                            "Focus on immediate actions and strategic implications."
+                        ),
+                    },
                     {
                         "role": "user",
                         "content": (
@@ -510,10 +513,10 @@ class ScenarioEngine:
                             f"Results: {json.dumps(summary_data, default=str)}\n\n"
                             "Provide 2-3 paragraphs of strategic commentary."
                         ),
-                    }
+                    },
                 ],
             )
-            return response.content[0].text
+            return response.choices[0].message.content
         except Exception as e:
             logger.warning("AI scenario commentary failed", error=str(e))
             return ""

@@ -20,15 +20,48 @@ async def seed_commodities_and_prices(db: AsyncSession):
 
     # Sample base prices per commodity (USD per unit)
     base_prices = {
+        # Grains & Staples
         "Rice (Long Grain)": 450,
         "Wheat": 280,
+        "Maize": 220,
+        "Flour": 350,
+        # Cooking & Food Oils
         "Sunflower Oil": 1100,
         "Soybean Oil": 1050,
         "Palm Oil": 900,
+        "Olive Oil": 4200,
+        # Sugar
         "Sugar (Raw)": 420,
+        # Beverages
+        "Coffee (Arabica)": 4800,
+        "Coffee (Robusta)": 2600,
+        "Tea": 3100,
+        "Cocoa": 3400,
+        # Dairy
+        "Powdered Milk": 3200,
+        "Butter": 5800,
+        "Cheese": 4500,
+        # Packaging
+        "Paper/Cardboard": 850,
+        "HDPE (Plastic)": 1400,
+        "PET Resin": 1200,
+        "Polypropylene (PP)": 1350,
+        "Aluminum": 2400,
+        "Tin Plate": 25000,
+        # Cleaning & Household
+        "Paraffin Wax": 1100,
+        "Caustic Soda": 450,
+        # Energy (cost drivers)
         "Diesel": 85,
         "Brent Crude Oil": 78,
-        "Powdered Milk": 3200,
+        # Shipping (index values)
+        "Baltic Dry Index": 1800,
+        "Container Freight Rate": 2500,
+        # Currencies (exchange rates)
+        "USD/TRY": 32.5,
+        "USD/EGP": 48.5,
+        "USD/CNY": 7.25,
+        "USD/LBP": 89500,
     }
 
     now = datetime.utcnow()

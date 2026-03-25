@@ -85,6 +85,36 @@ async def update_currency_rates():
             await tracker.close()
 
 
+async def fetch_news():
+    """Periodically fetch commodity-related news from RSS feeds."""
+    async with async_session() as db:
+        from backend.services.news.rss_fetcher import RSSFetcher
+
+        fetcher = RSSFetcher(db)
+        try:
+            result = await fetcher.fetch_and_store()
+            logger.info("Scheduled news fetch complete", **result)
+        except Exception as e:
+            logger.error("News fetch failed", error=str(e))
+        finally:
+            await fetcher.close()
+
+
+async def fetch_forex_rates():
+    """Periodically fetch multi-currency exchange rates (TRY, EGP, CNY, LBP)."""
+    async with async_session() as db:
+        from backend.services.market_data.forex_connector import ForexConnector
+
+        connector = ForexConnector(db)
+        try:
+            rates = await connector.fetch_and_persist()
+            logger.info("Forex rates fetched and persisted", pairs=len(rates))
+        except Exception as e:
+            logger.error("Forex rate fetch failed", error=str(e))
+        finally:
+            await connector.close()
+
+
 async def check_port_status():
     """Periodically check Lebanese port operational status."""
     async with async_session() as db:
@@ -208,6 +238,18 @@ def setup_scheduler():
         generate_reorder_suggestions,
         trigger=IntervalTrigger(hours=8),
         id="generate_reorder_suggestions",
+        replace_existing=True,
+    )
+    scheduler.add_job(
+        fetch_forex_rates,
+        trigger=IntervalTrigger(hours=4),
+        id="fetch_forex_rates",
+        replace_existing=True,
+    )
+    scheduler.add_job(
+        fetch_news,
+        trigger=IntervalTrigger(hours=2),
+        id="fetch_news",
         replace_existing=True,
     )
     scheduler.start()

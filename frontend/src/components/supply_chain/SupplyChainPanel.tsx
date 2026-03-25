@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { ShieldAlert, Users, AlertTriangle } from "lucide-react";
+import SupplyRouteMap from "./SupplyRouteMap";
 
 const riskVariant = (level: string) => {
   switch (level) {
@@ -106,6 +107,9 @@ export default function SupplyChainPanel() {
           )}
         </CardContent>
       </Card>
+
+      {/* Supply Route Map */}
+      <SupplyRouteMap />
 
       {/* High Risk Suppliers */}
       {overview.data?.high_risk_suppliers && overview.data.high_risk_suppliers.length > 0 && (

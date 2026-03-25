@@ -180,3 +180,163 @@ export interface ReorderSuggestion {
 export interface NotificationChannels {
   channels: Record<string, { configured: boolean; [key: string]: unknown }>;
 }
+
+// --- Morning Brief ---
+export interface MorningBriefCommodity {
+  commodity_id: number;
+  commodity_name: string;
+  category: string;
+  unit: string;
+  current_price_usd: number | null;
+  week_change_pct: number | null;
+  month_change_pct: number | null;
+  trend_90d: "up" | "down" | "flat";
+  ma_90d: number | null;
+  signal: "BUY" | "HOLD" | "WAIT";
+  sparkline: number[];
+  alert_flag: boolean;
+  last_updated: string | null;
+}
+
+export interface MorningBriefCurrency {
+  pair: string;
+  rate: number;
+  day_change_pct: number | null;
+  week_change_pct: number | null;
+  trend: "up" | "down" | "flat";
+  last_updated?: string | null;
+}
+
+export interface MorningBriefResponse {
+  generated_at: string;
+  alert_banner: MorningBriefCommodity[];
+  commodities: MorningBriefCommodity[];
+  currencies: MorningBriefCurrency[];
+  shipping: MorningBriefCommodity[];
+}
+
+// --- Commodity Detail ---
+export interface CommodityDetail {
+  commodity_id: number;
+  commodity_name: string;
+  category: string;
+  price_history: {
+    date: string;
+    price_usd: number;
+    ma_30: number | null;
+    ma_90: number | null;
+  }[];
+  volatility_current: number | null;
+  volatility_level: "high" | "medium" | "low";
+  price_context: {
+    avg_1y?: number;
+    vs_1y_avg_pct?: number;
+    avg_3y?: number;
+    vs_3y_avg_pct?: number;
+    percentile?: number;
+  };
+  correlations: {
+    commodity_id: number;
+    commodity_name: string;
+    correlation: number;
+    strength: "strong" | "moderate" | "weak";
+  }[];
+}
+
+export interface AISummary {
+  commodity_id: number;
+  commodity_name: string;
+  summary: string;
+  current_price_usd: number;
+  vs_90d_avg_pct: number;
+  generated_at: string;
+}
+
+// --- Landed Cost ---
+export interface LandedCostResult {
+  id?: number;
+  commodity_name: string;
+  origin_country: string;
+  quantity: number;
+  unit: string;
+  incoterm: string;
+  fob_price_usd: number;
+  freight_cost_usd: number;
+  insurance_pct: number;
+  insurance_cost_usd: number;
+  cif_price_usd: number;
+  duty_pct: number;
+  duty_usd: number;
+  port_charges_usd: number;
+  inland_transport_usd: number;
+  total_landed_cost_usd: number;
+  cost_per_unit_usd: number;
+  calculated_at?: string;
+}
+
+// --- News ---
+export interface NewsArticle {
+  id: number;
+  title: string;
+  url: string;
+  source: string;
+  published_at: string | null;
+  summary: string | null;
+  matched_commodities: string[];
+  sentiment: string | null;
+  impact_score: number | null;
+}
+
+// --- Geopolitical ---
+export interface GeopoliticalScenario {
+  id: string;
+  name: string;
+  description: string;
+  affected_count: number;
+}
+
+export interface SupplyRoute {
+  id: string;
+  name: string;
+  origin: { lat: number; lng: number; city: string };
+  destination: { lat: number; lng: number; city: string };
+  waypoints: string[];
+  typical_days: number;
+  commodities: string[];
+  risk_factors: string[];
+}
+
+// --- Geopolitical Scenario Result ---
+export interface CommodityImpact {
+  direction: "up" | "down";
+  estimated_pct: number;
+  confidence: "high" | "medium" | "low";
+}
+
+export interface GeopoliticalScenarioResult {
+  name: string;
+  description: string;
+  affected_commodities: Record<string, CommodityImpact>;
+  note: string;
+}
+
+// --- Alert Threshold ---
+export interface AlertThreshold {
+  id: number;
+  commodity_id: number | null;
+  alert_type: string;
+  threshold_value: number;
+  is_active: boolean;
+  notify_channels: string | null;
+}
+
+// --- Landed Cost History Item ---
+export interface LandedCostHistoryItem {
+  id: number;
+  commodity_name: string;
+  origin_country: string;
+  quantity: number;
+  fob_price_usd: number;
+  total_landed_cost_usd: number;
+  calculated_at: string | null;
+}

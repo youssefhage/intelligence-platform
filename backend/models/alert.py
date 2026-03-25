@@ -21,6 +21,9 @@ class AlertType(str, enum.Enum):
     CURRENCY_SHIFT = "currency_shift"
     GEOPOLITICAL = "geopolitical"
     SOURCING_OPPORTUNITY = "sourcing_opportunity"
+    BUY_WINDOW = "buy_window"
+    SHIPPING_RATE_CHANGE = "shipping_rate_change"
+    SOURCING_CURRENCY_MOVE = "sourcing_currency_move"
 
 
 class Alert(Base):

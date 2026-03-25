@@ -14,6 +14,10 @@ class CommodityCategory(str, enum.Enum):
     SUGAR = "sugar"
     FUEL = "fuel"
     PACKAGING = "packaging"
+    BEVERAGE = "beverage"
+    CLEANING = "cleaning"
+    SHIPPING = "shipping"
+    CURRENCY = "currency"
     OTHER = "other"
 
 
